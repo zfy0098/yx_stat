@@ -33,6 +33,28 @@ public class JedisUtils {
 
 
 	/**
+	 *    计数形式保存key
+	 * @param redisPoolKey
+	 * @param key
+	 * @return
+	 */
+	public static long incr(String redisPoolKey , String key ){
+		long value = 0;
+		Jedis jedis = null;
+		try {
+			jedis = getResource(redisPoolKey);
+			value = jedis.incr(key);
+		} catch (Exception e) {
+			logger.warn("incr {} = {}", key , e);
+		} finally {
+			returnResource(redisPoolKey , jedis);
+		}
+
+		return value;
+	}
+
+
+	/**
 	 * 获取缓存
 	 * @param key 键
 	 * @return 值

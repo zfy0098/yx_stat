@@ -14,11 +14,11 @@ public class ConfigDao  extends ConfigDataBase{
 
     private ConfigDao(){}
 
-    public static ConfigDao getConfigDao(){
+    public static ConfigDao getInstance(){
         if(configDao == null){
-            return new ConfigDao();
+            configDao =  new ConfigDao();
         }
-        return null;
+        return configDao;
     }
 
 

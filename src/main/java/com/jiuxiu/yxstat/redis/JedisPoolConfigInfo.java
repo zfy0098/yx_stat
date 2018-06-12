@@ -31,6 +31,8 @@ public class JedisPoolConfigInfo extends JedisPoolConfigAbstract {
 
     public static String statRedisPoolKey = "stat";
 
+    public static String kafkaOffsetRedisPoolKey = "kafkaOffset";
+
 
     private JedisPoolConfigInfo() {
 
@@ -90,8 +92,15 @@ public class JedisPoolConfigInfo extends JedisPoolConfigAbstract {
         jedisPoolMap.put(statRedisPoolKey , statRedis);
 
 
-
-
+        /**
+         *   保存 kafka offset
+         */
+        String kafkaOffsetHost = PropertyUtils.getValue("kafka.offset.redis.host");
+        int  kafkaOffsetProt = Integer.parseInt(PropertyUtils.getValue("kafka.offset.redis.port"));
+        String kafkaOffsetPasswrod = PropertyUtils.getValue("kafka.offset.redis.password");
+        int dataIndex = Integer.parseInt(PropertyUtils.getValue("kafka.offset.redis.dataIndex"));
+        JedisPool kafkaOffsetRedis = new JedisPool(getJedisPoolConfig() , kafkaOffsetHost , kafkaOffsetProt , timeOut , kafkaOffsetPasswrod , dataIndex);
+        jedisPoolMap.put(kafkaOffsetRedisPoolKey , kafkaOffsetRedis);
 
         /**
          *   pika reids 配置信息
@@ -107,7 +116,7 @@ public class JedisPoolConfigInfo extends JedisPoolConfigAbstract {
 
     public static JedisPoolConfigInfo getJedisPool() {
         if (jedisPoolConfig == null) {
-            return new JedisPoolConfigInfo();
+            jedisPoolConfig = new JedisPoolConfigInfo();
         }
         return jedisPoolConfig;
     }

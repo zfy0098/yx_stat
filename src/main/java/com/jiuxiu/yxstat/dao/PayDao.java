@@ -15,9 +15,9 @@ public class PayDao extends PayDataBase {
 
     private PayDao(){}
 
-    public static PayDao getPayDao(){
+    public static PayDao getInstance(){
         if(payDao == null){
-            return new PayDao();
+            payDao = new PayDao();
         }
         return payDao;
     }

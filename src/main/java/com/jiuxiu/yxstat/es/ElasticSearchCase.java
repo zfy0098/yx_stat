@@ -1,6 +1,5 @@
 package com.jiuxiu.yxstat.es;
 
-import com.jiuxiu.yxstat.es.bean.UserBean;
 import net.sf.json.JSONObject;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;

@@ -13,7 +13,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- provided / compile -->
-        <maven.scope>compile</maven.scope>
+        <maven.scope>provided</maven.scope>
     </properties>
 
     <dependencies>
@@ -124,7 +124,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.jiuxiu.yxstat.hbase.HbaseCase</mainClass>
+                            <mainClass>com.jiuxiu.yxstat.service.deviceinstall.ActivationDataService</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

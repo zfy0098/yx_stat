@@ -17,7 +17,7 @@ import java.net.UnknownHostException;
 public class ElasticearchConfig {
 
 
-    private static Client client;
+    private static Client client = null;
     private final static String CLUSTER_NAME = PropertyUtils.getValue("es.cluster_name");
     private final static String HOST = PropertyUtils.getValue("es.host");
     private final static int PORT = Integer.parseInt(PropertyUtils.getValue("es.port"));
@@ -28,17 +28,20 @@ public class ElasticearchConfig {
      * @return
      */
     public static Client getClient(){
-        try {
-            Settings settings = Settings.builder()
-                    .put("cluster.name", CLUSTER_NAME)
-                    .build();
-            client = new PreBuiltTransportClient(settings)
-                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(HOST), PORT));
-            return client;
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        return null;
+       if (client == null){
+           try {
+               Settings settings = Settings.builder()
+                       .put("cluster.name", CLUSTER_NAME)
+                       .put("client.transport.sniff" , true)
+                       .build();
+               client = new PreBuiltTransportClient(settings)
+                       .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(HOST), PORT));
+               return client;
+           } catch (UnknownHostException e) {
+               client = null;
+           }
+       }
+       return client;
     }
 
 
@@ -48,7 +51,7 @@ public class ElasticearchConfig {
      */
     public static void closeClient(Client client){
         if(client != null){
-            client.close();
+//            client.close();
         }
     }
 }

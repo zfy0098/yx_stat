@@ -64,7 +64,6 @@ public class BaseDao {
             return -1;
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
     }
 
@@ -103,7 +102,6 @@ public class BaseDao {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql, e);
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
         return null;
     }
@@ -142,7 +140,6 @@ public class BaseDao {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql, e);
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
         return null;
     }
@@ -186,7 +183,6 @@ public class BaseDao {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql, e);
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
         return null;
     }
@@ -225,7 +221,6 @@ public class BaseDao {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql + " ,params:" + Arrays.toString(params), e);
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
         return null;
     }
@@ -255,7 +250,6 @@ public class BaseDao {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql, e);
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
         return null;
     }
@@ -290,7 +284,6 @@ public class BaseDao {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql, e);
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
         return null;
     }
@@ -324,7 +317,6 @@ public class BaseDao {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql, e);
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
-//            ConnectionFactory.getInstance().closeDruidDataSource(getDruidDataSource());
         }
         return null;
     }
@@ -333,7 +325,7 @@ public class BaseDao {
         return druidDataSource;
     }
 
-    protected void setDruidDataSource(DruidDataSource druidDataSource) {
+    void setDruidDataSource(DruidDataSource druidDataSource) {
         this.druidDataSource = druidDataSource;
     }
 }

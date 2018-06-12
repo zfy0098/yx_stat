@@ -13,9 +13,9 @@ public class UserDao extends UserDataBase {
     private static UserDao userDao = null;
     private UserDao(){}
 
-    public static UserDao getUserDao(){
+    public static UserDao getInstance(){
         if(userDao == null){
-            return new UserDao();
+            userDao = new UserDao();
         }
         return userDao;
     }
