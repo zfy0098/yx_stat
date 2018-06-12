@@ -3,129 +3,82 @@ package com.jiuxiu.yxstat.es;
 import com.jiuxiu.yxstat.utils.PropertyUtils;
 import com.jiuxiu.yxstat.utils.StringUtils;
 import net.sf.json.JSONObject;
-import org.elasticsearch.action.get.GetRequestBuilder;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created with IDEA by Zhoufy on 2018/5/18.
+ * Created by ZhouFy on 2018/6/12.
  *
- * @author Zhoufy
+ * @author ZhouFy
  */
-public class DeviceInstallInfo implements Serializable {
-
-    private static DeviceInstallInfo deviceInstall = null;
+public class DeviceActivationStatisticsESStorage {
 
     private String index = PropertyUtils.getValue("es.device_install_index");
 
-    private DeviceInstallInfo() {
-    }
+    private static DeviceActivationStatisticsESStorage deviceActivationStatisticsESStorage = null;
 
-    public static DeviceInstallInfo getInstance() {
-        if (deviceInstall == null) {
-            deviceInstall = new DeviceInstallInfo();
+    private DeviceActivationStatisticsESStorage (){}
+
+    public static DeviceActivationStatisticsESStorage getInstance(){
+        if(deviceActivationStatisticsESStorage == null){
+            deviceActivationStatisticsESStorage = new DeviceActivationStatisticsESStorage();
         }
-        return deviceInstall;
+        return deviceActivationStatisticsESStorage;
     }
-
 
     /**
-     * 根据imei 查询设备激活情况
-     *
+     *  查询 android 设备激活信息
      * @param imei
+     * @param appid
+     * @param childID
      * @return
      */
-    public GetResponse getDeviceInstallByID(String imei) {
+    public SearchResponse getAppDeviceActivationForImei(String imei , int appid , int childID){
         Client client = ElasticSearchConfig.getClient();
-        GetRequestBuilder getRequestBuilder = client.prepareGet(index, "device_install", imei);
-        return getRequestBuilder.execute().actionGet();
+        String type = index + "_APPID_" + appid ;
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("imei" , imei))
+                .must(QueryBuilders.termQuery("child_id" , childID));
+        return client.prepareSearch(index).setTypes(type).setQuery(queryBuilder).execute().actionGet();
     }
 
     /**
-     * ios 特殊数据处理 ， 没有imei 和idfa  通过 ip  devicename  deviceosver 来查询设备激活情况
-     *
+     *  查询 ios 设备激活信息
+     * @param idfa
+     * @param appid
+     * @param childID
+     * @return
+     */
+    public SearchResponse getAppDeviceActivationForIdfa(String idfa , int appid , int childID){
+        Client client = ElasticSearchConfig.getClient();
+        String type = index + "_APPID_" + appid ;
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("idfa" , idfa))
+                .must(QueryBuilders.termQuery("child_id" , childID));
+        return client.prepareSearch(index).setTypes(type).setQuery(queryBuilder).execute().actionGet();
+    }
+
+
+    /**
      * @param ip
      * @param deviceName
      * @param deviceOsVer
      * @return
      */
-    public synchronized SearchResponse iosSpecialSearch(String ip, String deviceName, String deviceOsVer) {
+    public SearchResponse iosSpecialSearchForAppID(String ip, String deviceName, String deviceOsVer, int appid , int childID) {
         Client client = ElasticSearchConfig.getClient();
-
+        String esType = index + "_APPID_" + appid;
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .must(QueryBuilders.termQuery("ip", ip))
                 .must(QueryBuilders.termQuery("device_name", deviceName))
                 .must(QueryBuilders.termQuery("device_os_ver", deviceOsVer))
-                .must(QueryBuilders.termQuery("os", 2))
-                .must(QueryBuilders.termQuery("imei", ""))
-                .must(QueryBuilders.termQuery("idfa", ""));
-
-        SearchResponse response = null;
-        if (client != null) {
-            response = client.prepareSearch(index).setTypes("device_install").setQuery(queryBuilder).execute().actionGet();
-        }
-        return response;
-    }
-
-
-    /**
-     * 保存设备激活信息
-     *
-     * @param json
-     */
-    public synchronized void saveDeviceInstall(JSONObject json) {
-        Client client = ElasticSearchConfig.getClient();
-        Map<String, Object> source = esDataReduction(json);
-        if (client != null) {
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(index, "device_install");
-            String id = json.getString("imei");
-            if (StringUtils.isEmpty(id)) {
-                id = json.getString("idfa");
-            }
-            if (!StringUtils.isEmpty(id)) {
-                indexRequestBuilder.setId(id);
-            }
-            indexRequestBuilder.setSource(source).execute().actionGet();
-        }
-    }
-
-
-    /**
-     * 根据 imei 和 5种 id  查询对应的设备激活情况
-     *
-     * @param imei
-     * @param typeId
-     * @return
-     */
-    public GetResponse getDeviceInstallForTypeIDByImei(String imei, String type, int typeId) {
-        Client client = ElasticSearchConfig.getClient();
-        String esType = index + "_" + type + "_" + typeId;
-        GetRequestBuilder getRequestBuilder = client.prepareGet(index, esType, imei);
-        return getRequestBuilder.execute().actionGet();
-    }
-
-    /**
-     * @param ip
-     * @param deviceName
-     * @param deviceOsVer
-     * @param typeId
-     * @return
-     */
-    public SearchResponse iosSpecialSearchForTypeId(String ip, String deviceName, String deviceOsVer, String type, int typeId) {
-        Client client = ElasticSearchConfig.getClient();
-        String esType = index + "_" + type + "_" + typeId;
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .must(QueryBuilders.termQuery("ip", ip))
-                .must(QueryBuilders.termQuery("device_name", deviceName))
-                .must(QueryBuilders.termQuery("device_os_ver", deviceOsVer))
+                .must(QueryBuilders.termQuery("child_id", childID))
                 .must(QueryBuilders.termQuery("os", 2))
                 .must(QueryBuilders.termQuery("imei", ""))
                 .must(QueryBuilders.termQuery("idfa", ""));
@@ -137,14 +90,20 @@ public class DeviceInstallInfo implements Serializable {
         return response;
     }
 
+
+    /**
+     * 保存设备激活信息
+     *
+     * @param json
+     */
     /**
      * 保存设备对应 typeid 激活信息
      *
      * @param json
      */
-    public void saveDeviceInstallForTypeID(JSONObject json, String type, int typeId) {
+    public void saveDeviceInstallForAppID(JSONObject json,  int appid) {
 
-        String esType = index + "_" + type + "_" + typeId;
+        String esType = index + "_APPID_" + appid;
         Client client = ElasticSearchConfig.getClient();
         Map<String, Object> source = esDataReduction(json);
         if (client != null) {
@@ -183,4 +142,5 @@ public class DeviceInstallInfo implements Serializable {
         source.put("package_id", json.getInt("package_id"));
         return source;
     }
+
 }

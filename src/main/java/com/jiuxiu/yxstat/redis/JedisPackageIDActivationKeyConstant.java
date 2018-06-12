@@ -1,7 +1,5 @@
 package com.jiuxiu.yxstat.redis;
 
-import com.jiuxiu.yxstat.utils.DateUtil;
-
 public class JedisPackageIDActivationKeyConstant {
 
     /**
@@ -25,10 +23,19 @@ public class JedisPackageIDActivationKeyConstant {
     public static String PACKAGE_ID_STARTUP_DEVICE_COUNT = "_PACKAGE_ID_STARTUP_DEVICE_COUNT:";
 
     /**
+     *   IOS 启动设备数
+     */
+    public static String IOS_PACKAGE_ID_STARTUP_DEVICE_COUNT = "_IOS_PACKAGE_ID_STARTUP_DEVICE_COUNT:";
+
+    /**
      *   启动设备信息
      */
     public static String PACKAGE_ID_STARTUP_DEVICE_INFO = "_PACKAGE_ID_STARTUP_DEVICE_INFO_IMEI:";
 
+    /**
+     * ios 启动设备信息
+     */
+    public static String IOS_PACKAGE_ID_STARTUP_DEVICE_INFO = "_IOS_PACKAGE_ID_STARTUP_DEVICE_INFO_IDFA:";
 
     /**
      *   ios 没有唯一值 ， 同 ip 设备名，设备系统版本 启动的设备数 key

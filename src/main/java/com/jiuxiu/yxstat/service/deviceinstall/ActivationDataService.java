@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * @author admin
  */
-public class ActivationDataService implements Serializable{
+public class ActivationDataService implements Serializable {
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -44,10 +44,10 @@ public class ActivationDataService implements Serializable{
 
     private StatDeviceActiveDao statDeviceActiveDao = StatDeviceActiveDao.getInstance();
 
-
-    public void initialization(String[] args){
+    public void initialization(String[] args) {
 
         String sparkMasterURL = PropertyUtils.getValue("spark.master.url");
+        sparkMasterURL = "local[1]";
         String appName = "ceShi";
         int seconds = 10;
 
@@ -75,7 +75,7 @@ public class ActivationDataService implements Serializable{
         JavaStreamingContext ssc = SparkConfiguration.getJavaStreamingContext(sparkMasterURL, appName, seconds);
 
         //通过KafkaUtils.createDirectStream(...)获得kafka数据，kafka相关参数由kafkaParams指定
-        JavaDStream<ConsumerRecord<String, String>> stream = SparkConfiguration.initialization(ssc , topicPartitionMap);
+        JavaDStream<ConsumerRecord<String, String>> stream = SparkConfiguration.initialization(ssc, topicPartitionMap);
 
 
         stream.foreachRDD(new VoidFunction<JavaRDD<ConsumerRecord<String, String>>>() {
@@ -105,15 +105,16 @@ public class ActivationDataService implements Serializable{
                 android.foreach(new VoidFunction<JSONObject>() {
                     @Override
                     public void call(JSONObject jsonObject) throws Exception {
-                        JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_COUNT);
+                        JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_COUNT);
                     }
                 });
                 android.filter(new Function<JSONObject, Boolean>() {
-                    Map<String,JSONObject> androidDevice = new HashMap<>(16);
+                    Map<String, JSONObject> androidDevice = new HashMap<>(16);
+
                     @Override
                     public Boolean call(JSONObject json) throws Exception {
-                        if(androidDevice.get(json.getString("imei")) == null){
-                            androidDevice.put(json.getString("imei") , json);
+                        if (androidDevice.get(json.getString("imei")) == null) {
+                            androidDevice.put(json.getString("imei"), json);
                             return true;
                         }
                         return false;
@@ -122,35 +123,39 @@ public class ActivationDataService implements Serializable{
                     @Override
                     public void call(JSONObject json) throws Exception {
                         GetResponse response = deviceInstallInfo.getDeviceInstallByID(json.getString("imei"));
-                        if(response == null || response.getSource() == null){
+                        if (response == null || response.getSource() == null) {
                             // android 没有激活设备
                             // 将设备信息保存到es中
                             deviceInstallInfo.saveDeviceInstall(json);
-                            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.ANDROID_NEW_DEVICE_COUNT);
+                            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.ANDROID_NEW_DEVICE_COUNT);
                         }
                         // 从redis 中获取 设备启动信息 如果不存在 证明当天是 改设备第一次启动 将count 加1 并将信息保存到redis中
                         String key = toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_DEVICE_INFO + json.getString("imei");
-                        String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , key);
-                        if(value == null){
-                            JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey  , key , json.toString() , 0);
-                            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_DEVICE_COUNT);
+                        String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, key);
+                        if (value == null) {
+                            JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, key, json.toString(), 0);
+                            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_DEVICE_COUNT);
                         }
                     }
                 });
                 // android 新设备数
-                String androidNewDeviceCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.ANDROID_NEW_DEVICE_COUNT);
+                String androidNewDeviceCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.ANDROID_NEW_DEVICE_COUNT);
                 //  android 设备启动数
-                String androidDeviceStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_DEVICE_COUNT);
+                String androidDeviceStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_DEVICE_COUNT);
                 //  android 启动数
-                String androidStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_COUNT);
+                String androidStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.ANDROID_STARTUP_COUNT);
 
-                androidNewDeviceCount = androidNewDeviceCount == null ? "0":androidNewDeviceCount;
-                androidDeviceStartUpCount = androidDeviceStartUpCount == null ? "0":androidDeviceStartUpCount;
-                androidStartUpCount = androidStartUpCount == null ? "0":androidStartUpCount;
+                androidNewDeviceCount = androidNewDeviceCount == null ? "0" : androidNewDeviceCount;
+                androidDeviceStartUpCount = androidDeviceStartUpCount == null ? "0" : androidDeviceStartUpCount;
+                androidStartUpCount = androidStartUpCount == null ? "0" : androidStartUpCount;
 
-                //  保存数据库操作
-                statDeviceActiveDao.saveDeviceActiveCount(new Object[]{androidNewDeviceCount, androidDeviceStartUpCount, androidStartUpCount, ServiceConstant.ANDROID_OS ,
-                        androidNewDeviceCount, androidDeviceStartUpCount, androidStartUpCount});
+
+                String zero = "0";
+                if (!StringUtils.equals(androidNewDeviceCount, zero) || !StringUtils.equals(androidDeviceStartUpCount, zero) || !StringUtils.equals(androidStartUpCount, zero)) {
+                    //  保存数据库操作
+                    statDeviceActiveDao.saveDeviceActiveCount(new Object[]{androidNewDeviceCount, androidDeviceStartUpCount, androidStartUpCount, ServiceConstant.ANDROID_OS,
+                            androidNewDeviceCount, androidDeviceStartUpCount, androidStartUpCount});
+                }
 
 
                 // ios数据
@@ -164,21 +169,22 @@ public class ActivationDataService implements Serializable{
                 ios.foreach(new VoidFunction<JSONObject>() {
                     @Override
                     public void call(JSONObject json) throws Exception {
-                        JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_COUNT);
+                        JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_COUNT);
                     }
                 });
                 ios.filter(new Function<JSONObject, Boolean>() {
-                    Map<String,JSONObject> iosDevice = new HashMap<>(16);
+                    Map<String, JSONObject> iosDevice = new HashMap<>(16);
+
                     @Override
                     public Boolean call(JSONObject jsonObject) throws Exception {
                         String id = jsonObject.getString("imei");
-                        if(StringUtils.isEmpty(id)){
+                        if (StringUtils.isEmpty(id)) {
                             id = jsonObject.getString("idfa");
                         }
-                        if(StringUtils.isEmpty(id)){
+                        if (StringUtils.isEmpty(id)) {
                             return true;
-                        }else if(iosDevice.get(id) == null){
-                            iosDevice.put(id , jsonObject);
+                        } else if (iosDevice.get(id) == null) {
+                            iosDevice.put(id, jsonObject);
                             return true;
                         }
                         return false;
@@ -188,58 +194,61 @@ public class ActivationDataService implements Serializable{
                     public void call(JSONObject jsonObject) throws Exception {
 
                         String id = jsonObject.getString("imei");
-                        if(StringUtils.isEmpty(id)){
+                        if (StringUtils.isEmpty(id)) {
                             id = jsonObject.getString("idfa");
                         }
                         // 没有获取到ios的唯一值
-                        if(StringUtils.isEmpty(id)){
-                                // no
-                            String countKey = JedisDeviceActivationKeyConstant.IOS_NEW_DEVICE_IP_DEVICENAME_DEVICEOSVER_COUNT + jsonObject.getString("client_ip") + jsonObject.getString("device_name")
-                                    + jsonObject.getString("device_os_ver");
-                            saveIOSNewDeviceInfo(countKey , jsonObject);
+                        if (StringUtils.isEmpty(id)) {
+
+                            String deviceName = jsonObject.getString("device_name");
+                            String deviceOSVer = jsonObject.getString("device_os_ver");
+                            String ip = jsonObject.getString("client_ip");
+
+                            // no
+                            String countKey = JedisDeviceActivationKeyConstant.IOS_NEW_DEVICE_IP_DEVICENAME_DEVICEOSVER_COUNT + ip + ":"+ deviceName + ":" + deviceOSVer;
+                            saveIOSNewDeviceInfo(countKey, jsonObject);
 
                             // 查询设备当天是否有启动记录
-                            String key = toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_INFO_IP_DEVICENAME_DEVICEOSVER
-                                    + jsonObject.getString("client_ip") + jsonObject.getString("device_name") + jsonObject.getString("device_os_ver");
-                            saveIOSDeviceStartUpInfo(key , jsonObject);
+                            String key = toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_INFO_IP_DEVICENAME_DEVICEOSVER + ip + ":"+ deviceName + ":" + deviceOSVer;
+                            saveIOSDeviceStartUpInfo(key, jsonObject);
 
-                        }else{
+                        } else {
                             GetResponse getResponse = deviceInstallInfo.getDeviceInstallByID(id);
-                            if(getResponse == null || getResponse.getSource() == null){
-                               deviceInstallInfo.saveDeviceInstall(jsonObject);
-                               JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.IOS_NEW_DEVICE_COUNT);
+                            if (getResponse == null || getResponse.getSource() == null) {
+                                deviceInstallInfo.saveDeviceInstall(jsonObject);
+                                JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.IOS_NEW_DEVICE_COUNT);
                             }
 
                             String key = toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_INFO + id;
-                            String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , key);
-                            if(value == null){
-                               JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey , key , jsonObject.toString() , 0);
-                               JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_COUNT);
+                            String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, key);
+                            if (value == null) {
+                                JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, key, jsonObject.toString(), 0);
+                                JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_COUNT);
                             }
                         }
                     }
                 });
 
                 // ios新增设备数
-                String iosNewDeviceCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.IOS_NEW_DEVICE_COUNT);
+                String iosNewDeviceCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.IOS_NEW_DEVICE_COUNT);
                 // ios启动设备数
-                String iosDeviceStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_COUNT);
+                String iosDeviceStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_COUNT);
                 // ios启动次数
-                String iosStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_COUNT);
+                String iosStartUpCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceActivationKeyConstant.IOS_STARTUP_COUNT);
 
                 iosNewDeviceCount = iosNewDeviceCount == null ? "0" : iosNewDeviceCount;
                 iosDeviceStartUpCount = iosDeviceStartUpCount == null ? "0" : iosDeviceStartUpCount;
                 iosStartUpCount = iosStartUpCount == null ? "0" : iosStartUpCount;
 
-
-                String zero = "0";
-                if(!StringUtils.equals(iosNewDeviceCount ,zero) || !StringUtils.equals(iosDeviceStartUpCount ,zero) || !StringUtils.equals(iosStartUpCount ,zero)){
+                if (!StringUtils.equals(iosNewDeviceCount, zero) || !StringUtils.equals(iosDeviceStartUpCount, zero) || !StringUtils.equals(iosStartUpCount, zero)) {
                     //  保存数据库操作
                     statDeviceActiveDao.saveDeviceActiveCount(new Object[]{iosNewDeviceCount, iosDeviceStartUpCount, iosStartUpCount, ServiceConstant.IOS_OS,
                             iosNewDeviceCount, iosDeviceStartUpCount, iosStartUpCount});
                 }
 
-                ActivationStatisticsService.activationData(javaRDD);
+                AndroidActivationDataService.androidActivationData(android);
+                IOSActivationDataService.iosActivationData(ios);
+                StartupCountDataService.startupCount(javaRDD);
 
                 //遍历分区信息,将新的offset保存到redis中
                 OffsetRange[] offsetRanges = ((HasOffsetRanges) consumer.rdd()).offsetRanges();
@@ -248,7 +257,7 @@ public class ActivationDataService implements Serializable{
                 });
                 for (int i = 0; i < offsetRanges.length; i++) {
                     log.info("输出 offsetRanges ：" + offsetRanges[i]);
-                    JedisUtils.set(JedisPoolConfigInfo.kafkaOffsetRedisPoolKey, topics + "_" + offsetRanges[i].partition() , String.valueOf(offsetRanges[i].fromOffset()), 0);
+                    JedisUtils.set(JedisPoolConfigInfo.kafkaOffsetRedisPoolKey, topics + "_" + offsetRanges[i].partition(), String.valueOf(offsetRanges[i].fromOffset()), 0);
                 }
             }
         });
@@ -261,39 +270,31 @@ public class ActivationDataService implements Serializable{
         }
     }
 
-
-
-    public synchronized void saveIOSNewDeviceInfo(String key , JSONObject json){
-        String count = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , key);
-        count = count== null ? "0" : count;
-        if(Integer.parseInt(count) < ServiceConstant.ACTIVE_COUNT){
+    public synchronized void saveIOSNewDeviceInfo(String key, JSONObject json) {
+        String count = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, key);
+        count = count == null ? "0" : count;
+        if (Integer.parseInt(count) < ServiceConstant.ACTIVE_COUNT) {
             JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, JedisDeviceActivationKeyConstant.IOS_NEW_DEVICE_COUNT);
-            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , key);
+            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, key);
             deviceInstallInfo.saveDeviceInstall(json);
         }
-
     }
 
-
-    public synchronized void saveIOSDeviceStartUpInfo(String key , JSONObject jsonObject){
-        String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey , key);
-        value = value == null ?"0" : value;
-        if(Integer.parseInt(value) < ServiceConstant.ACTIVE_COUNT){
-            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , key);
-            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey , JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_COUNT);
+    public synchronized void saveIOSDeviceStartUpInfo(String key, JSONObject jsonObject) {
+        String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, key);
+        value = value == null ? "0" : value;
+        if (Integer.parseInt(value) < ServiceConstant.ACTIVE_COUNT) {
+            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, key);
+            JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_COUNT);
             String infoKey = JedisDeviceActivationKeyConstant.IOS_STARTUP_DEVICE_INFO_IP_DEVICENAME_DEVICEOSVER
                     + jsonObject.getString("client_ip") + jsonObject.getString("device_name")
                     + jsonObject.getString("device_os_ver") + "_LOGIN:" + jsonObject.getString("logid");
-            JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey  , infoKey , jsonObject.toString() , 0);
+            JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, infoKey, jsonObject.toString(), 0);
         }
     }
 
-
-
-
-    public static void main(String[] args){
+    public static void main(String[] args) {
         ActivationDataService activationDataService = new ActivationDataService();
         activationDataService.initialization(args);
     }
-
 }

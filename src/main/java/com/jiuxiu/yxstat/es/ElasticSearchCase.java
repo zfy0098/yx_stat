@@ -1,6 +1,5 @@
 package com.jiuxiu.yxstat.es;
 
-import net.sf.json.JSONObject;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -22,7 +21,7 @@ public class ElasticSearchCase {
 
     public void init() {
 
-        Client client = ElasticearchConfig.getClient();
+        Client client = ElasticSearchConfig.getClient();
 
         if(client == null){
             return ;
@@ -31,10 +30,6 @@ public class ElasticSearchCase {
         GetRequestBuilder getRequestBuilder = client.prepareGet("user_index" , "user" , "31289801");
         GetResponse response = getRequestBuilder.execute().actionGet();
 
-        UserBean userBean = (UserBean) JSONObject.toBean(JSONObject.fromObject(response.getSource()), UserBean.class);
-
-        log.info(userBean.getAccountid());
-        log.info(userBean.getUid() + "");
 
 
         log.info("------------------------------------------------------------------------------------------------------");
@@ -63,7 +58,7 @@ public class ElasticSearchCase {
 
 
 
-        ElasticearchConfig.closeClient(client);
+        ElasticSearchConfig.closeClient(client);
     }
 
     public static void main(String[] args){

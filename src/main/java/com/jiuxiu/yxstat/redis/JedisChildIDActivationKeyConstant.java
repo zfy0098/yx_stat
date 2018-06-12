@@ -24,10 +24,19 @@ public class JedisChildIDActivationKeyConstant {
     public static String CHILD_ID_STARTUP_DEVICE_COUNT = "_CHILD_ID_STARTUP_DEVICE_COUNT:";
 
     /**
+     *   IOS 启动设备数
+     */
+    public static String IOS_CHILD_ID_STARTUP_DEVICE_COUNT = "_IOS_CHILD_ID_STARTUP_DEVICE_COUNT:";
+
+    /**
      *   启动设备信息
      */
     public static String CHILD_ID_STARTUP_DEVICE_INFO = "_CHILD_ID_STARTUP_DEVICE_INFO_IMEI:";
 
+    /**
+     *  IOS 启动设备信息
+     */
+    public static String IOS_CHILD_ID_STARTUP_DEVICE_INFO = "_IOS_CHILD_ID_STARTUP_DEVICE_INFO_IDFA:";
 
     /**
      *   ios 没有唯一值 ， 同 ip 设备名，设备系统版本 启动的设备数 key

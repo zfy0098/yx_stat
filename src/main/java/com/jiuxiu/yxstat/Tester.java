@@ -20,14 +20,9 @@ public class Tester {
 
     public static void main(String[] args) throws  Exception{
 
-        System.out.println("time  :" + ConstantTest.time);
-        System.out.println("time2 :" + ConstantTest.time2);
+        StringBuffer key = new StringBuffer("123");
 
-
-        Thread.sleep(5000);
-
-        System.out.println("time  :" + ConstantTest.time);
-        System.out.println("time2 :" + ConstantTest.time2);
+        System.out.println(key.toString());
 
     }
 }

@@ -21,36 +21,114 @@ public class StatActivationStatisticsDao extends StatDataBase {
         return statActivationStatisticsDao;
     }
 
-
+    /**
+     *  保存 package id 启动数
+     * @param obj
+     * @return
+     */
     public int savePackageIdStartUpCount(Object[] obj) {
         String sql = "insert into stat_package_id_device_active (package_id , startup_count, date) values  (?,?,date(now())) on  " +
                 " duplicate key update startup_count = startup_count + ? ";
         return executeSql(sql, obj);
     }
 
+    /**
+     *   保存 child id 启动数
+     * @param obj
+     * @return
+     */
     public int saveChildIDStartUpCount(Object[] obj) {
         String sql = "insert  into stat_child_id_device_active (child_id , startup_count, date) values  (?,?,date(now())) on  " +
                 " duplicate key update startup_count = startup_count + ? ";
         return executeSql(sql, obj);
     }
 
-
+    /**
+     *   保存 app channel id启动数
+     * @param obj
+     * @return
+     */
     public int saveAppChannelIdStartUpCount(Object[] obj) {
         String sql = "insert  into stat_app_channel_id_device_active (app_channel_id , startup_count, date) values  (?,?,date(now())) on  " +
                 " duplicate key update startup_count = startup_count + ? ";
         return executeSql(sql, obj);
     }
 
+    /**
+     *  保存 channel id启动数
+     * @param obj
+     * @return
+     */
     public int saveChannelIdStartUpCount(Object[] obj) {
         String sql = "insert  into stat_channel_id_device_active (channel_id , startup_count, date) values  (?,?,date(now())) on  " +
-                " duplicate key update startup_count = update startup_count + ? ";
+                " duplicate key update startup_count = startup_count + ? ";
         return executeSql(sql, obj);
     }
 
+    /**
+     *   保存app id 启动数
+     * @param obj
+     * @return
+     */
     public int saveAppIdStartUpCount(Object[] obj) {
         String sql = "insert  into stat_app_id_device_active (app_id , startup_count, date) values  (?,?,date(now())) on  " +
                 " duplicate key update startup_count = startup_count + ? ";
         return executeSql(sql, obj);
     }
+//
+//    /**
+//     *   保存 child id 新增设备数
+//     * @param obj
+//     * @return
+//     */
+//    public int saveChildIdNewDeviceCount(Object[] obj){
+//        String sql = "insert  into stat_child_id_device_active (child_id , new_device_count, date) values  (?,?,date(now())) on  " +
+//                " duplicate key update new_device_count = ? ";
+//        return executeSql(sql , obj);
+//    }
+//
+//    /**
+//     *   保存 app channel id 新增设备数
+//     * @param obj
+//     * @return
+//     */
+//    public int saveAppChannelIdNewDeviceCount(Object[] obj) {
+//        String sql = "insert  into stat_app_channel_id_device_active (app_channel_id , new_device_count, date) values  (?,?,date(now())) on  " +
+//                " duplicate key update new_device_count=? ";
+//        return executeSql(sql, obj);
+//    }
+//
+//    /**
+//     *  保存  app id 新增设备数
+//     * @param obj
+//     * @return
+//     */
+//    public int saveAppIdNewDeviceCount(Object[] obj){
+//        String sql = "insert  into stat_app_id_device_active (app_id , new_device_count, date) values  (?,?,date(now())) on  " +
+//                " duplicate key update new_device_count=? ";
+//        return executeSql(sql , obj);
+//    }
+//
+//    /**
+//     *   保存channel id 新增设备数
+//     * @param obj
+//     * @return
+//     */
+//    public int saveChannelIdNewDeviceCount(Object[] obj){
+//        String sql = "insert  into stat_channel_id_device_active (channel_id , new_device_count, date) values  (?,?,date(now())) on  " +
+//                " duplicate key update new_device_count=? ";
+//        return executeSql(sql , obj);
+//    }
+//
+//    /**
+//     *   保存package id 新增设备数
+//     * @param obj
+//     * @return
+//     */
+//    public int savePackageIdNewDeviceCount(Object[] obj){
+//        String sql = "insert  into stat_package_id_device_active (package_id , new_device_count, date) values  (?,?,date(now())) on  " +
+//                " duplicate key update new_device_count=? ";
+//        return executeSql(sql , obj);
+//    }
 
 }

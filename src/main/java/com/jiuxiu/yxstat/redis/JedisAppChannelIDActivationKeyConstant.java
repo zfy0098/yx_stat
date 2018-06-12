@@ -24,10 +24,19 @@ public class JedisAppChannelIDActivationKeyConstant {
     public static String APP_CHANNEL_ID_STARTUP_DEVICE_COUNT = "_APP_CHANNEL_ID_STARTUP_DEVICE_COUNT:";
 
     /**
+     *   IOS 启动设备数
+     */
+    public static String IOS_APP_CHANNEL_ID_STARTUP_DEVICE_COUNT = "IOS_APP_CHANNEL_ID_STARTUP_DEVICE_COUNT:";
+
+    /**
      *   启动设备信息
      */
     public static String APP_CHANNEL_ID_STARTUP_DEVICE_INFO = "_APP_CHANNEL_ID_STARTUP_DEVICE_INFO_IMEI:";
 
+    /**
+     *   IOS 启动设备信息
+     */
+    public static String IOS_APP_CHANNEL_ID_STARTUP_DEVICE_INFO = "_APP_CHANNEL_ID_STARTUP_DEVICE_INFO_IDFA:";
 
     /**
      *   ios 没有唯一值 ， 同 ip 设备名，设备系统版本 启动的设备数 key
