@@ -74,8 +74,6 @@ public class SparkConfiguration {
     public static JavaDStream<ConsumerRecord<String, String>> initialization(JavaStreamingContext ssc, Map<TopicPartition, Long> topicPartitionMap) {
         String zkQuorum = PropertyUtils.getValue("kafka.bootstrap.servers");
         String group = PropertyUtils.getValue("kafka.group.id");
-        String topics = PropertyUtils.getValue("kafka.topics");
-        Collection<String> topicsSet = new HashSet<>(Arrays.asList(topics.split(",")));
 
         //kafka相关参数，必要！缺了会报错
         Map<String, Object> kafkaParams = new HashMap<>(16);
@@ -86,11 +84,12 @@ public class SparkConfiguration {
         kafkaParams.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("enable.auto.commit", false);
 
+
         //通过KafkaUtils.createDirectStream(...)获得kafka数据，kafka相关参数由kafkaParams指定
         return KafkaUtils.createDirectStream(
                 ssc,
                 LocationStrategies.PreferConsistent(),
-                ConsumerStrategies.Subscribe(topicsSet , kafkaParams, topicPartitionMap)
+                ConsumerStrategies.Assign(topicPartitionMap.keySet() , kafkaParams, topicPartitionMap)
         );
     }
 

@@ -133,7 +133,6 @@ public class BaseDao {
                 connection.commit();
                 connection.setAutoCommit(autoCommit);
                 state.close();
-                ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
                 return j;
             }
         } catch (SQLException e) {

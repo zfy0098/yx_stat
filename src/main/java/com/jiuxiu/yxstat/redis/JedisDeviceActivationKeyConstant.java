@@ -1,7 +1,5 @@
 package com.jiuxiu.yxstat.redis;
 
-import com.jiuxiu.yxstat.utils.DateUtil;
-
 
 public class JedisDeviceActivationKeyConstant {
 

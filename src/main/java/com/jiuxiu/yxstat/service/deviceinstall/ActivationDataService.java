@@ -101,7 +101,7 @@ public class ActivationDataService implements Serializable {
                     }
                 });
 
-                // 设置启动次数
+                // android 启动次数
                 android.foreach(new VoidFunction<JSONObject>() {
                     @Override
                     public void call(JSONObject jsonObject) throws Exception {
@@ -156,7 +156,6 @@ public class ActivationDataService implements Serializable {
                     statDeviceActiveDao.saveDeviceActiveCount(new Object[]{androidNewDeviceCount, androidDeviceStartUpCount, androidStartUpCount, ServiceConstant.ANDROID_OS,
                             androidNewDeviceCount, androidDeviceStartUpCount, androidStartUpCount});
                 }
-
 
                 // ios数据
                 JavaRDD<JSONObject> ios = javaRDD.filter(new Function<JSONObject, Boolean>() {
@@ -246,8 +245,11 @@ public class ActivationDataService implements Serializable {
                             iosNewDeviceCount, iosDeviceStartUpCount, iosStartUpCount});
                 }
 
+                //  计算 android 数据
                 AndroidActivationDataService.androidActivationData(android);
+                //  计算 ios 数据
                 IOSActivationDataService.iosActivationData(ios);
+                //  计算 启动数 数据
                 StartupCountDataService.startupCount(javaRDD);
 
                 //遍历分区信息,将新的offset保存到redis中
@@ -270,6 +272,11 @@ public class ActivationDataService implements Serializable {
         }
     }
 
+    /**
+     *    计算ios 新设备信息
+     * @param key
+     * @param json
+     */
     public synchronized void saveIOSNewDeviceInfo(String key, JSONObject json) {
         String count = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, key);
         count = count == null ? "0" : count;
@@ -280,6 +287,11 @@ public class ActivationDataService implements Serializable {
         }
     }
 
+    /**
+     *  保存 ios 启动设备信息
+     * @param key
+     * @param jsonObject
+     */
     public synchronized void saveIOSDeviceStartUpInfo(String key, JSONObject jsonObject) {
         String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, key);
         value = value == null ? "0" : value;

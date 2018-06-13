@@ -18,10 +18,13 @@ import com.jiuxiu.yxstat.utils.DateUtil;
 import com.jiuxiu.yxstat.utils.StringUtils;
 import net.sf.json.JSONObject;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.elasticsearch.action.search.SearchResponse;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ZhouFy on 2018/6/12.
@@ -58,16 +61,24 @@ public class IOSActivationDataService implements Serializable{
                 String idfa = json.getString("idfa");
                 boolean flag = false;
 
-                if (StringUtils.isEmpty(idfa)) {
-                    String deviceName = json.getString("device_name");
-                    String deviceOSVer = json.getString("device_os_ver");
-                    String ip = json.getString("client_ip");
+                if (StringUtils.isEmpty(imei)) {
+                     if(StringUtils.isEmpty(idfa)){
+                         SearchResponse searchResponse = deviceActivationStatisticsESStorage.getAppDeviceActivationForIdfa(idfa, appID, childID);
+                         if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().getHits() == null ||
+                                 searchResponse.getHits().getHits().length == 0) {
+                             flag = true;
+                         }
+                     }else{
+                         String deviceName = json.getString("device_name");
+                         String deviceOSVer = json.getString("device_os_ver");
+                         String ip = json.getString("client_ip");
 
-                    SearchResponse searchResponse = deviceActivationStatisticsESStorage.iosSpecialSearchForAppID(ip, deviceName, deviceOSVer, appID, childID);
-                    if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().getHits() == null ||
-                            searchResponse.getHits().getHits().length < ServiceConstant.ACTIVE_COUNT) {
-                        flag = true;
-                    }
+                         SearchResponse searchResponse = deviceActivationStatisticsESStorage.iosSpecialSearchForAppID(ip, deviceName, deviceOSVer, appID, childID);
+                         if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().getHits() == null ||
+                                 searchResponse.getHits().getHits().length < ServiceConstant.ACTIVE_COUNT) {
+                             flag = true;
+                         }
+                     }
                 } else {
                     SearchResponse searchResponse = deviceActivationStatisticsESStorage.getAppDeviceActivationForImei(imei, appID, childID);
                     if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().getHits() == null ||
@@ -150,8 +161,28 @@ public class IOSActivationDataService implements Serializable{
             }
         });
 
+        ios.filter(new Function<JSONObject, Boolean>() {
+            Map<String , JSONObject> map = new HashMap<>(16);
+            @Override
+            public Boolean call(JSONObject json) throws Exception {
+                StringBuffer key = new StringBuffer();
+                key.append(json.getInt("package_id"));
+                key.append("#");
+                key.append(json.getInt("child_id"));
+                key.append("#");
+                key.append(json.getInt("app_channel_id"));
+                key.append("#");
+                key.append(json.getInt("channel_id"));
+                key.append("#");
+                key.append(json.getInt("appid"));
 
-        ios.foreach(new VoidFunction<JSONObject>() {
+                if(map.get(key.toString()) == null){
+                    map.put(key.toString() , json);
+                    return true;
+                }
+                return false;
+            }
+        }).foreach(new VoidFunction<JSONObject>() {
             @Override
             public void call(JSONObject json) {
                 int appID = json.getInt("appid");

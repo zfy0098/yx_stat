@@ -1,6 +1,5 @@
 package com.jiuxiu.yxstat.service.deviceinstall;
 
-import com.jiuxiu.yxstat.dao.stat.StatActivationStatisticsDao;
 import com.jiuxiu.yxstat.dao.stat.StatAppChannelIdDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.StatAppIdDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.StatChannelIdDeviceActiveDao;
@@ -17,10 +16,13 @@ import com.jiuxiu.yxstat.redis.JedisUtils;
 import com.jiuxiu.yxstat.utils.DateUtil;
 import net.sf.json.JSONObject;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.elasticsearch.action.search.SearchResponse;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ZhouFy on 2018/6/12.
@@ -102,9 +104,33 @@ public class AndroidActivationDataService implements Serializable{
                 }
             }
         });
-        android.foreach(new VoidFunction<JSONObject>() {
+        android.filter(new Function<JSONObject, Boolean>() {
+            Map<String,Object> map = new HashMap<>(16);
+            @Override
+            public Boolean call(JSONObject json) throws Exception {
+                StringBuffer key = new StringBuffer();
+                key.append(json.getInt("package_id"));
+                key.append("#");
+                key.append(json.getInt("child_id"));
+                key.append("#");
+                key.append(json.getInt("app_channel_id"));
+                key.append("#");
+                key.append(json.getInt("channel_id"));
+                key.append("#");
+                key.append(json.getInt("appid"));
+
+                if(map.get(key.toString()) == null){
+                    map.put(key.toString() , json);
+                    return true;
+                }
+                return false;
+            }
+        }).foreach(new VoidFunction<JSONObject>() {
             @Override
             public void call(JSONObject json) {
+
+                System.out.println("JSON :" + json.toString());
+
                 int appID = json.getInt("appid");
                 int childID = json.getInt("child_id");
                 int appChannelID = json.getInt("app_channel_id");
