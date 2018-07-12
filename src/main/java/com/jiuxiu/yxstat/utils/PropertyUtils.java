@@ -14,10 +14,11 @@ public class PropertyUtils {
 
     private PropertyUtils() {
         try {
-            pro.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("db.properties"));
+            pro.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("product.db.properties"));
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
+
     }
 
     public static PropertyUtils getInstance(){

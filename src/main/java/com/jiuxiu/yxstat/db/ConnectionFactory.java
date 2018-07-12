@@ -21,6 +21,7 @@ public class ConnectionFactory {
         return connectionFactory;
     }
 
+
     public DruidDataSource getDruidDataSource(String username, String password, String jdbcurl) {
 
         DruidDataSource datasource = new DruidDataSource();
@@ -83,18 +84,6 @@ public class ConnectionFactory {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage() + "code = " + e.getErrorCode());
-        }
-    }
-
-
-    /**
-     * 关闭 druidDataSource 对象
-     *
-     * @param datasource
-     */
-    public void closeDruidDataSource(DruidDataSource datasource) {
-        if (datasource != null) {
-            datasource.close();
         }
     }
 }

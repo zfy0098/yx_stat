@@ -8,7 +8,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka010.CanCommitOffsets;
@@ -36,7 +35,10 @@ public class SparkConfiguration {
     private static Logger log = LoggerFactory.getLogger(SparkConfiguration.class);
 
     public static JavaStreamingContext getJavaStreamingContext(String sparkMasterURL, String appName, int seconds) {
-        SparkConf conf = new SparkConf().setMaster(sparkMasterURL).set("spark.executor.cores" , "1").setAppName(appName);
+        SparkConf conf = new SparkConf().setMaster(sparkMasterURL)
+                .set("spark.executor.cores" , "1")
+                .set("spark.streaming.kafka.maxRatePerPartition", "10000")
+                .setAppName(appName);
         JavaSparkContext sc = new JavaSparkContext(conf);
         return new JavaStreamingContext(sc, Durations.seconds(seconds));
     }
@@ -71,7 +73,7 @@ public class SparkConfiguration {
      * @param topicPartitionMap
      * @return
      */
-    public static JavaDStream<ConsumerRecord<String, String>> initialization(JavaStreamingContext ssc, Map<TopicPartition, Long> topicPartitionMap) {
+    public static JavaInputDStream<ConsumerRecord<String, String>> initialization(JavaStreamingContext ssc, Map<TopicPartition, Long> topicPartitionMap) {
         String zkQuorum = PropertyUtils.getValue("kafka.bootstrap.servers");
         String group = PropertyUtils.getValue("kafka.group.id");
 
@@ -84,12 +86,11 @@ public class SparkConfiguration {
         kafkaParams.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         kafkaParams.put("enable.auto.commit", false);
 
-
         //通过KafkaUtils.createDirectStream(...)获得kafka数据，kafka相关参数由kafkaParams指定
         return KafkaUtils.createDirectStream(
                 ssc,
                 LocationStrategies.PreferConsistent(),
-                ConsumerStrategies.Assign(topicPartitionMap.keySet() , kafkaParams, topicPartitionMap)
+                ConsumerStrategies.Assign(topicPartitionMap.keySet(), kafkaParams, topicPartitionMap)
         );
     }
 

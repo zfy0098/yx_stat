@@ -85,29 +85,6 @@ public class SparkTest2 implements Serializable {
             }
         });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         System.out.println(" lines .foreachrdd ===== >");
         stream.foreachRDD(new VoidFunction<JavaRDD<ConsumerRecord<String, String>>>() {
             @Override

@@ -25,6 +25,7 @@ import java.util.Map;
  */
 public class BaseDao {
 
+
     protected Logger log = LoggerFactory.getLogger(this.getClass());
 
     private DruidDataSource druidDataSource = null;
@@ -66,6 +67,7 @@ public class BaseDao {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
         }
     }
+
 
     /**
      * 批量执行sql语句 paramsArr是个2维数组，第一维度表示各条记录，第二维度表示各条记录里的各个parameter值
@@ -318,10 +320,6 @@ public class BaseDao {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
         }
         return null;
-    }
-
-    protected DruidDataSource getDruidDataSource() {
-        return druidDataSource;
     }
 
     void setDruidDataSource(DruidDataSource druidDataSource) {

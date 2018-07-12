@@ -1,14 +1,7 @@
 package com.jiuxiu.yxstat;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.jiuxiu.yxstat.utils.ConstantTest;
-import org.elasticsearch.action.support.ThreadedActionListener;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import com.jiuxiu.yxstat.enums.RegisterType;
+import com.jiuxiu.yxstat.utils.DateUtil;
 
 /**
  * Created with IDEA by Zhoufy on 2018/5/14.
@@ -16,13 +9,12 @@ import java.util.concurrent.TimeUnit;
  * @author Zhoufy
  */
 public class Tester {
+    public static void main(String[] args){
 
+        System.out.println(DateUtil.getNowFutureWhileMinute(1530079947L));
+        String time = "2018-06-27 14:20:00";
 
-    public static void main(String[] args) throws  Exception{
-
-        StringBuffer key = new StringBuffer("123");
-
-        System.out.println(key.toString());
-
+        String nowTime = time.substring(0 , 4).replace("-" , "");
+        System.out.println(nowTime);
     }
 }

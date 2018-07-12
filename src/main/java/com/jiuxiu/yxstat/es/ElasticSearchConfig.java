@@ -19,8 +19,16 @@ public class ElasticSearchConfig {
 
     private static Client client = null;
     private final static String CLUSTER_NAME = PropertyUtils.getValue("es.cluster_name");
-    private final static String HOST = PropertyUtils.getValue("es.host");
-    private final static int PORT = Integer.parseInt(PropertyUtils.getValue("es.port"));
+
+    private final static String HOST = PropertyUtils.getValue("es.device.install.host");
+    private final static int PORT = Integer.parseInt(PropertyUtils.getValue("es.device.install.port"));
+
+    private final static String SECOND_HOST = PropertyUtils.getValue("es.device.install.host.second");
+    private final static int SECOND_PORT = Integer.parseInt(PropertyUtils.getValue("es.device.install.port.second"));
+
+    private final static String THIRD_HOST = PropertyUtils.getValue("es.device.install.host.third");
+    private final static int THIRD_PORT = Integer.parseInt(PropertyUtils.getValue("es.device.install.port.third"));
+
 
 
     /**
@@ -34,8 +42,10 @@ public class ElasticSearchConfig {
                        .put("cluster.name", CLUSTER_NAME)
                        .put("client.transport.sniff" , true)
                        .build();
-               client = new PreBuiltTransportClient(settings)
-                       .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(HOST), PORT));
+               client = new PreBuiltTransportClient(settings).addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(HOST), PORT))
+                .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(SECOND_HOST), SECOND_PORT))
+                .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(THIRD_HOST), THIRD_PORT));
+
                return client;
            } catch (UnknownHostException e) {
                client = null;

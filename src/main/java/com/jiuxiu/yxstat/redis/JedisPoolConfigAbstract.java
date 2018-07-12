@@ -10,8 +10,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 public class JedisPoolConfigAbstract {
 
-
-    private static  JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+    private static JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
 
     static {
         jedisPoolConfig.setMaxIdle(Integer.parseInt(PropertyUtils.getValue("redis.maxIdle")));
@@ -19,21 +18,7 @@ public class JedisPoolConfigAbstract {
         jedisPoolConfig.setTestOnBorrow(Boolean.valueOf(PropertyUtils.getValue("redis.testOnBorrow")));
     }
 
-
-    protected JedisPoolConfig getJedisPoolConfig(){
+    JedisPoolConfig getJedisPoolConfig() {
         return jedisPoolConfig;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

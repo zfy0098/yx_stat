@@ -1,18 +1,10 @@
 package com.jiuxiu.yxstat.service.deviceinstall;
 
-import com.jiuxiu.yxstat.dao.stat.StatAppChannelIdDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.StatAppIdDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.StatChannelIdDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.StatChildDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.StatPackageIdDeviceActiveDao;
-import com.jiuxiu.yxstat.es.DeviceActivationStatisticsESStorage;
-import com.jiuxiu.yxstat.redis.JedisAppChannelIDActivationKeyConstant;
-import com.jiuxiu.yxstat.redis.JedisAppIDActivationKeyConstant;
-import com.jiuxiu.yxstat.redis.JedisChannelIDActivationKeyConstant;
-import com.jiuxiu.yxstat.redis.JedisChildIDActivationKeyConstant;
-import com.jiuxiu.yxstat.redis.JedisPackageIDActivationKeyConstant;
+import com.jiuxiu.yxstat.es.deviceinstall.DeviceActivationStatisticsESStorage;
 import com.jiuxiu.yxstat.redis.JedisPoolConfigInfo;
 import com.jiuxiu.yxstat.redis.JedisUtils;
+import com.jiuxiu.yxstat.redis.deviceinstall.JedisDeviceInstallKeyConstant;
+import com.jiuxiu.yxstat.service.ServiceConstant;
 import com.jiuxiu.yxstat.utils.DateUtil;
 import net.sf.json.JSONObject;
 import org.apache.spark.api.java.JavaRDD;
@@ -29,96 +21,29 @@ import java.util.Map;
  *
  * @author ZhouFy
  */
-public class AndroidActivationDataService implements Serializable{
-
-    private static StatAppIdDeviceActiveDao statAppIdDeviceActiveDao = StatAppIdDeviceActiveDao.getInstance();
-
-    private static StatChildDeviceActiveDao statChildDeviceActiveDao = StatChildDeviceActiveDao.getInstance();
-
-    private static StatChannelIdDeviceActiveDao statChannelIdDeviceActiveDao = StatChannelIdDeviceActiveDao.getInstance();
-
-    private static StatAppChannelIdDeviceActiveDao statAppChannelIdDeviceActiveDao = StatAppChannelIdDeviceActiveDao.getInstance();
-
-    private static StatPackageIdDeviceActiveDao statPackageIdDeviceActiveDao = StatPackageIdDeviceActiveDao.getInstance();
+public class AndroidActivationDataService implements Runnable ,  Serializable {
 
     private static DeviceActivationStatisticsESStorage deviceActivationStatisticsESStorage = DeviceActivationStatisticsESStorage.getInstance();
 
+    private JavaRDD<JSONObject> android;
 
-    public static void androidActivationData(JavaRDD<JSONObject> android) {
+    AndroidActivationDataService(JavaRDD<JSONObject> android) {
+        this.android = android;
+    }
 
-        String toDay = DateUtil.getNowDate(DateUtil.yyyy_MM_dd);
-
-        android.foreach(new VoidFunction<JSONObject>() {
-            @Override
-            public void call(JSONObject json) {
-                int appID = json.getInt("appid");
-                int childID = json.getInt("child_id");
-                int appChannelID = json.getInt("app_channel_id");
-                int channelID = json.getInt("channel_id");
-                int packageID = json.getInt("package_id");
-                String imei = json.getString("imei");
-                SearchResponse searchResponse = deviceActivationStatisticsESStorage.getAppDeviceActivationForImei(imei, appID, childID);
-                if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().getHits() == null || searchResponse.getHits().getHits().length == 0) {
-                    // 没有激活
-                    deviceActivationStatisticsESStorage.saveDeviceInstallForAppID(json, appID);
-                    //  保存 child id 激活数
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChildIDActivationKeyConstant.CHILD_ID_NEW_DEVICE_COUNT + childID);
-                    //  保存 app id 激活数
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppIDActivationKeyConstant.APP_ID_NEW_DEVICE_COUNT + appID);
-                    //  保存 app channel id 激活数
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppChannelIDActivationKeyConstant.APP_CHANNEL_ID_NEW_DEVICE_COUNT + appChannelID);
-                    //  保存 channel id 激活数
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChannelIDActivationKeyConstant.CHANNEL_ID_NEW_DEVICE_COUNT + channelID);
-                    //  保存 package id 激活数
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisPackageIDActivationKeyConstant.PACKAGE_ID_NEW_DEVICE_COUNT + packageID);
-                }
-                // child id 启动数
-                String value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChildIDActivationKeyConstant.CHILD_ID_STARTUP_DEVICE_INFO + childID + ":" + imei);
-                if (value == null) {
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChildIDActivationKeyConstant.CHILD_ID_STARTUP_DEVICE_COUNT + childID);
-                    JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChildIDActivationKeyConstant.CHILD_ID_STARTUP_DEVICE_INFO + childID + ":" + imei, json.toString(), 0);
-                }
-                //  app channel id 启动数
-                value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppChannelIDActivationKeyConstant.APP_CHANNEL_ID_STARTUP_DEVICE_INFO + appChannelID + ":" + imei);
-                if (value == null) {
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppChannelIDActivationKeyConstant.APP_CHANNEL_ID_STARTUP_DEVICE_COUNT + appChannelID);
-                    JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppChannelIDActivationKeyConstant.APP_CHANNEL_ID_STARTUP_DEVICE_INFO + appChannelID + ":" + imei, json.toString(), 0);
-                }
-                //  app id 启动数
-                value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppIDActivationKeyConstant.APP_ID_STARTUP_DEVICE_INFO + appID + ":" + imei);
-                if (value == null) {
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppIDActivationKeyConstant.APP_ID_STARTUP_DEVICE_COUNT + appID);
-                    JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppIDActivationKeyConstant.APP_ID_STARTUP_DEVICE_INFO + appID + ":" + imei, json.toString(), 0);
-                }
-                //  channel id 启动数
-                value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChannelIDActivationKeyConstant.CHANNEL_ID_STARTUP_DEVICE_INFO + channelID + ":" + imei);
-                if (value == null) {
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChannelIDActivationKeyConstant.CHANNEL_ID_STARTUP_DEVICE_COUNT + channelID);
-                    JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChannelIDActivationKeyConstant.CHANNEL_ID_STARTUP_DEVICE_INFO + channelID + ":" + imei, json.toString(), 0);
-                }
-                //  package id 启动数
-                value = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisPackageIDActivationKeyConstant.PACKAGE_ID_STARTUP_DEVICE_INFO + packageID + ":" + imei);
-                if (value == null) {
-                    JedisUtils.incr(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisPackageIDActivationKeyConstant.PACKAGE_ID_STARTUP_DEVICE_COUNT + packageID);
-                    JedisUtils.set(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisPackageIDActivationKeyConstant.PACKAGE_ID_STARTUP_DEVICE_INFO + packageID + ":" + imei, json.toString(), 0);
-                }
-            }
-        });
+    @Override
+    public void run() {
         android.filter(new Function<JSONObject, Boolean>() {
-            Map<String,Object> map = new HashMap<>(16);
+            Map<String,JSONObject> map = new HashMap<>(16);
             @Override
             public Boolean call(JSONObject json) throws Exception {
-                StringBuffer key = new StringBuffer();
-                key.append(json.getInt("package_id"));
-                key.append("#");
-                key.append(json.getInt("child_id"));
-                key.append("#");
-                key.append(json.getInt("app_channel_id"));
-                key.append("#");
-                key.append(json.getInt("channel_id"));
-                key.append("#");
+                StringBuilder key = new StringBuilder();
                 key.append(json.getInt("appid"));
-
+                key.append(json.getInt("child_id"));
+                key.append(json.getInt("app_channel_id"));
+                key.append(json.getInt("channel_id"));
+                key.append(json.getInt("package_id"));
+                key.append(json.getString("imei"));
                 if(map.get(key.toString()) == null){
                     map.put(key.toString() , json);
                     return true;
@@ -128,71 +53,110 @@ public class AndroidActivationDataService implements Serializable{
         }).foreach(new VoidFunction<JSONObject>() {
             @Override
             public void call(JSONObject json) {
-
-                System.out.println("JSON :" + json.toString());
-
                 int appID = json.getInt("appid");
                 int childID = json.getInt("child_id");
                 int appChannelID = json.getInt("app_channel_id");
                 int channelID = json.getInt("channel_id");
                 int packageID = json.getInt("package_id");
-                /*
-                 *   保存 新增设备数
-                 */
-                // 保存 child id 新增设备数 (激活数量)
-                String childIDNewDeviceCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChildIDActivationKeyConstant.CHILD_ID_NEW_DEVICE_COUNT + childID);
-                if (childIDNewDeviceCount != null) {
-                    statChildDeviceActiveDao.saveChildIdNewDeviceCount(new Object[]{childID, childIDNewDeviceCount, childIDNewDeviceCount});
-                }
-                // 保存 app Channel id 新增设备数
-                String appChannelIDNewDeviceCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppChannelIDActivationKeyConstant.APP_CHANNEL_ID_NEW_DEVICE_COUNT + appChannelID);
-                if (appChannelIDNewDeviceCount != null) {
-                    statAppChannelIdDeviceActiveDao.saveAppChannelIdNewDeviceCount(new Object[]{appChannelID, appChannelIDNewDeviceCount, appChannelIDNewDeviceCount});
-                }
-                // 保存 app id 新增设备数
-                String appIDNewDeviceCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppIDActivationKeyConstant.APP_ID_NEW_DEVICE_COUNT + appID);
-                if (appIDNewDeviceCount != null) {
-                    statAppIdDeviceActiveDao.saveAppIdNewDeviceCount(new Object[]{appID, appIDNewDeviceCount, appIDNewDeviceCount});
-                }
-                // 保存 channel id 新增设备数
-                String channelIDNewDevice = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChannelIDActivationKeyConstant.CHANNEL_ID_NEW_DEVICE_COUNT + channelID);
-                if (channelIDNewDevice != null) {
-                    statChannelIdDeviceActiveDao.saveChannelIdNewDeviceCount(new Object[]{channelID, channelIDNewDevice, channelIDNewDevice});
-                }
-                // 保存 package id 新增设备数
-                String packageIDNewDevice = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisPackageIDActivationKeyConstant.PACKAGE_ID_NEW_DEVICE_COUNT + packageID);
-                if (packageIDNewDevice != null) {
-                    statPackageIdDeviceActiveDao.savePackageIdNewDeviceCount(new Object[]{packageID, packageIDNewDevice, packageIDNewDevice});
-                }
+                String imei = json.getString("imei");
 
-                /*
-                 *  保存启动设备数
-                 */
-                // package id 启动设备数
-                String packageIDStartupCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisPackageIDActivationKeyConstant.PACKAGE_ID_STARTUP_DEVICE_COUNT + packageID);
-                if (packageIDStartupCount != null) {
-                    statPackageIdDeviceActiveDao.savePackageIdDeviceStartUpCount(new Object[]{packageID, packageIDStartupCount, packageIDStartupCount});
+                long second = json.getLong("ts");
+                String time = DateUtil.getNowFutureWhileMinute(json.getLong("ts"));
+                String toDay = DateUtil.secondToDateString(second , DateUtil.YYYY_MM_DD);
+
+                SearchResponse searchResponse = deviceActivationStatisticsESStorage.getAppDeviceActivationForImei(imei, appID, childID);
+                if (searchResponse.getHits().getHits().length == 0) {
+                    // 没有激活
+                    deviceActivationStatisticsESStorage.saveDeviceInstallForAppID(json, appID);
+                    // 将天数据保存到redis 中
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.APP_ID_NEW_DEVICE_COUNT + appID ,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME , imei + ":" + childID);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.CHILD_ID_NEW_DEVICE_COUNT + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME ,  imei);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.CHANNEL_ID_NEW_DEVICE_COUNT + channelID + ":" + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME , imei);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.APP_CHANNEL_ID_NEW_DEVICE_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME , imei);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.PACKAGE_ID_NEW_DEVICE_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME ,  imei);
+
+                    // 将分钟数据保存到redis 中
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.APP_ID_NEW_DEVICE_COUNT + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei + ":" + childID);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.CHILD_ID_NEW_DEVICE_COUNT + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.CHANNEL_ID_NEW_DEVICE_COUNT + channelID + ":" + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.APP_CHANNEL_ID_NEW_DEVICE_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                    JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.PACKAGE_ID_NEW_DEVICE_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                            ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+
                 }
-                // app channel id 启动设备数
-                String appChannelIDStartupCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppChannelIDActivationKeyConstant.APP_CHANNEL_ID_STARTUP_DEVICE_COUNT + appChannelID);
-                if (appChannelIDStartupCount != null) {
-                    statAppChannelIdDeviceActiveDao.saveAppChannelIdDeviceStartUpCount(new Object[]{appChannelID, appChannelIDStartupCount, appChannelIDStartupCount});
+                // 保存启动信息
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.APP_ID_STARTUP_DEVICE_COUNT + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei + ":" + childID);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.CHILD_ID_STARTUP_DEVICE_COUNT + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.CHANNEL_ID_STARTUP_DEVICE_COUNT + channelID + ":" + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.APP_CHANNEL_ID_STARTUP_DEVICE_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisDeviceInstallKeyConstant.PACKAGE_ID_STARTUP_DEVICE_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+
+                // 保存分钟数据
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.APP_ID_STARTUP_DEVICE_COUNT + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei + ":" + childID);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.CHILD_ID_STARTUP_DEVICE_COUNT + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.CHANNEL_ID_STARTUP_DEVICE_COUNT + channelID + ":" + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.APP_CHANNEL_ID_STARTUP_DEVICE_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+                JedisUtils.setSetAdd(JedisPoolConfigInfo.statRedisPoolKey, time + JedisDeviceInstallKeyConstant.PACKAGE_ID_STARTUP_DEVICE_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID,
+                        ServiceConstant.DEVICE_ACTIVATION_EXPIRE_TIME, imei);
+            }
+        });
+        android.filter(new Function<JSONObject, Boolean>() {
+            Map<String, Object> map = new HashMap<>(16);
+            @Override
+            public Boolean call(JSONObject json) {
+                StringBuilder key = new StringBuilder();
+                key.append(json.getInt("package_id"));
+                key.append(json.getInt("child_id"));
+                key.append(json.getInt("app_channel_id"));
+                key.append(json.getInt("channel_id"));
+                key.append(json.getInt("appid"));
+                long ts = json.getLong("ts");
+                String date = DateUtil.secondToDateString(ts, DateUtil.YYYY_MM_DD);
+                String time = DateUtil.getNowFutureWhileMinute(ts);
+                key.append(date);
+                key.append(time);
+
+                if (map.get(key.toString()) == null) {
+                    map.put(key.toString(), json);
+                    return true;
                 }
-                // appid 启动设备数
-                String appidStartupCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisAppIDActivationKeyConstant.APP_ID_STARTUP_DEVICE_COUNT + appID);
-                if (appidStartupCount != null) {
-                    statAppIdDeviceActiveDao.saveAppIdDeviceStartUpCount(new Object[]{appID, appidStartupCount, appidStartupCount});
-                }
-                //  channel  id  启动设备数
-                String channelIDStartupCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChannelIDActivationKeyConstant.CHANNEL_ID_STARTUP_DEVICE_COUNT + channelID);
-                if (channelIDStartupCount != null) {
-                    statChannelIdDeviceActiveDao.saveChannelIdDeviceStartUpCount(new Object[]{channelID, channelIDStartupCount, channelIDStartupCount});
-                }
-                // child id 启动设备数
-                String childIDStartupCount = JedisUtils.get(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisChildIDActivationKeyConstant.CHILD_ID_STARTUP_DEVICE_COUNT + childID);
-                if (childIDStartupCount != null) {
-                    statChildDeviceActiveDao.saveChildIdDeviceStartUpCount(new Object[]{childID, childIDStartupCount, childIDStartupCount});
-                }
+                return false;
+            }
+        }).foreach(new VoidFunction<JSONObject>() {
+            @Override
+            public void call(JSONObject json) {
+                int appID = json.getInt("appid");
+                int childID = json.getInt("child_id");
+                int appChannelID = json.getInt("app_channel_id");
+                int channelID = json.getInt("channel_id");
+                int packageID = json.getInt("package_id");
+                long second = json.getLong("ts");
+                String time = DateUtil.getNowFutureWhileMinute(second);
+                String toDay = DateUtil.secondToDateString(second , DateUtil.YYYY_MM_DD);
+
+                // 保存天统计数据
+                SaveDataUtils.saveDeviceInstallData(toDay, appID, childID, channelID, appChannelID, packageID);
+
+                // 保存分钟统计数据
+                SaveMinuteDataUtils.saveMinuteDeviceInstallData(time, appID, childID, channelID, appChannelID, packageID);
             }
         });
     }
