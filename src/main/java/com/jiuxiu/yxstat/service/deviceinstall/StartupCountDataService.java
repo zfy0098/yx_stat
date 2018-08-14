@@ -5,11 +5,6 @@ import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatAppIdDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatChannelIdDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatChildDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatPackageIdDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.deviceminute.StatAppChannelIdMinuteDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.deviceminute.StatAppIdMinuteDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.deviceminute.StatChannelIdMinuteDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.deviceminute.StatChildMinuteDeviceActiveDao;
-import com.jiuxiu.yxstat.dao.stat.deviceminute.StatPackageIdMinuteDeviceActiveDao;
 import com.jiuxiu.yxstat.utils.DateUtil;
 import net.sf.json.JSONObject;
 import org.apache.spark.api.java.JavaRDD;
@@ -38,20 +33,6 @@ public class StartupCountDataService implements Runnable ,  Serializable {
     private static StatAppChannelIdDeviceActiveDao statAppChannelIdDeviceActiveDao = StatAppChannelIdDeviceActiveDao.getInstance();
 
     private static StatPackageIdDeviceActiveDao statPackageIdDeviceActiveDao = StatPackageIdDeviceActiveDao.getInstance();
-
-
-    /**
-     * 分钟统计DAO类对象
-     */
-    private static StatChildMinuteDeviceActiveDao statChildMinuteDeviceActiveDao = StatChildMinuteDeviceActiveDao.getInstance();
-
-    private static StatAppIdMinuteDeviceActiveDao statAppIdMinuteDeviceActiveDao = StatAppIdMinuteDeviceActiveDao.getInstance();
-
-    private static StatChannelIdMinuteDeviceActiveDao statChannelIdMinuteDeviceActiveDao = StatChannelIdMinuteDeviceActiveDao.getInstance();
-
-    private static StatAppChannelIdMinuteDeviceActiveDao statAppChannelIdMinuteDeviceActiveDao = StatAppChannelIdMinuteDeviceActiveDao.getInstance();
-
-    private static StatPackageIdMinuteDeviceActiveDao statPackageIdMinuteDeviceActiveDao = StatPackageIdMinuteDeviceActiveDao.getInstance();
 
 
     private JavaRDD<JSONObject> javaRDD;
@@ -120,11 +101,11 @@ public class StartupCountDataService implements Runnable ,  Serializable {
                     /*
                      *  保存分钟统计数据
                      */
-                    statChildMinuteDeviceActiveDao.saveChildIDMinuteStartUpCount(time, appid, childID, tuple2._2);
-                    statAppChannelIdMinuteDeviceActiveDao.saveAppChannelIDMinuteStartUpCount(time, appid, childID, channelID, appChannelID, tuple2._2);
-                    statChannelIdMinuteDeviceActiveDao.saveChannelIDMinuteStartUpCount(time, appid, childID, channelID, tuple2._2);
-                    statAppIdMinuteDeviceActiveDao.saveAppIDMinuteStartUpCount(time, appid, tuple2._2);
-                    statPackageIdMinuteDeviceActiveDao.savePackageIDMinuteStartUpCount(time, appid, childID, channelID, appChannelID, packageID, tuple2._2);
+                    statChildDeviceActiveDao.saveChildIDMinuteStartUpCount(time, appid, childID, tuple2._2);
+                    statAppChannelIdDeviceActiveDao.saveAppChannelIDMinuteStartUpCount(time, appid, childID, channelID, appChannelID, tuple2._2);
+                    statChannelIdDeviceActiveDao.saveChannelIDMinuteStartUpCount(time, appid, childID, channelID, tuple2._2);
+                    statAppIdDeviceActiveDao.saveAppIDMinuteStartUpCount(time, appid, tuple2._2);
+                    statPackageIdDeviceActiveDao.savePackageIDMinuteStartUpCount(time, appid, childID, channelID, appChannelID, packageID, tuple2._2);
                 }
             }
         });

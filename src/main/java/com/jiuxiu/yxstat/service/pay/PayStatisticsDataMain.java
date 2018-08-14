@@ -63,8 +63,13 @@ public class PayStatisticsDataMain implements Serializable{
             }
             long count = javaRDD.count();
             if(count > 0){
-                payStatisticsDataService.payOrderData(javaRDD);
-                platformPayOrderDataService.platformPayOrderData(javaRDD);
+
+                JavaRDD<JSONObject> payOrder = javaRDD.filter(jsonObject ->
+                     1 == jsonObject.getInt("order_type")
+                );
+
+                payStatisticsDataService.payOrderData(payOrder);
+                platformPayOrderDataService.platformPayOrderData(payOrder);
 
                 consumer.foreach(x ->
                         System.out.println("pay_order_message:offset:" + x.offset() + ",partition:" + x.partition() + ",value=" + x.value())

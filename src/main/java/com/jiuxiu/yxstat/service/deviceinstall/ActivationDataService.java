@@ -64,57 +64,69 @@ public class ActivationDataService implements Serializable {
             public void call(JavaRDD<ConsumerRecord<String, String>> consumer) throws Exception {
 
                 String isExit = JedisUtils.get(JedisPoolConfigInfo.kafkaOffsetRedisPoolKey , topics );
-
                 if("1".equals(isExit)){
                     log.info("redis 获取 isExit 为：" + isExit + " , 程序退出 ");
                     System.exit(1);
                 }
 
-
                 JavaRDD<JSONObject> javaRDD = consumer.map(new Function<ConsumerRecord<String, String>, JSONObject>() {
                     @Override
                     public JSONObject call(ConsumerRecord<String, String> consumerRecord) throws Exception {
-                        return JSONObject.fromObject(consumerRecord.value());
+                        String value = consumerRecord.value();
+                        String[] data =  value.split("#device_install#");
+                        if(data.length == 3){
+                            return JSONObject.fromObject(data[1]);
+                        }
+                        try {
+                            return JSONObject.fromObject(value);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return null;
                     }
                 });
 
-                //  android 数据
-                JavaRDD<JSONObject> android = javaRDD.filter(new Function<JSONObject, Boolean>() {
-                    @Override
-                    public Boolean call(JSONObject jsonObject) throws Exception {
-                        return ServiceConstant.ANDROID_OS == jsonObject.getInt("os");
-                    }
-                });
-                // ios数据
-                JavaRDD<JSONObject> ios = javaRDD.filter(new Function<JSONObject, Boolean>() {
-                    @Override
-                    public Boolean call(JSONObject json) throws Exception {
-                        return ServiceConstant.IOS_OS == json.getInt("os");
-                    }
-                });
-                // 计算 启动数 数据
-                Thread startupCountTask = new Thread(new StartupCountDataService(javaRDD));
-                startupCountTask.start();
+                long count = javaRDD.count();
 
-                // 平台android数据
-                Thread platformAndroidTask = new Thread(new PlatformAndroidActivationDataService(android));
-                platformAndroidTask.start();
+                if(count > 0){
+                    //  android 数据
+                    JavaRDD<JSONObject> android = javaRDD.filter(new Function<JSONObject, Boolean>() {
+                        @Override
+                        public Boolean call(JSONObject jsonObject) throws Exception {
+                            return ServiceConstant.ANDROID_OS == jsonObject.getInt("os");
+                        }
+                    });
+                    // ios数据
+                    JavaRDD<JSONObject> ios = javaRDD.filter(new Function<JSONObject, Boolean>() {
+                        @Override
+                        public Boolean call(JSONObject json) throws Exception {
+                            return ServiceConstant.IOS_OS == json.getInt("os");
+                        }
+                    });
+                    // 计算 启动数 数据
+                    Thread startupCountTask = new Thread(new StartupCountDataService(javaRDD));
+                    startupCountTask.start();
 
-                // 平台 ios 数据
-                Thread platformIOSTask = new Thread(new PlatformIOSActivationDataService(ios));
-                platformIOSTask.start();
+                    // 平台android数据
+                    Thread platformAndroidTask = new Thread(new PlatformAndroidActivationDataService(android));
+                    platformAndroidTask.start();
 
-                // 计算 android 数据
-                Thread androidTask = new Thread(new AndroidActivationDataService(android));
-                androidTask.start();
+                    // 平台 ios 数据
+                    Thread platformIOSTask = new Thread(new PlatformIOSActivationDataService(ios));
+                    platformIOSTask.start();
 
-                // 计算 ios 数据
-                Thread iosTask = new Thread(new IOSActivationDataService(ios));
-                iosTask.start();
+                    // 计算 android 数据
+                    Thread androidTask = new Thread(new AndroidActivationDataService(android));
+                    androidTask.start();
 
-                consumer.foreach(x -> {
-                    System.out.println(x.key() + "----------" + x.value());
-                });
+                    // 计算 ios 数据
+                    Thread iosTask = new Thread(new IOSActivationDataService(ios));
+                    iosTask.start();
+
+                    consumer.foreach(x -> {
+                        System.out.println(x.key() + "----------" + x.value());
+                    });
+                }
 
                 //遍历分区信息,将新的offset保存到redis中
                 OffsetRange[] offsetRanges = ((HasOffsetRanges) consumer.rdd()).offsetRanges();
