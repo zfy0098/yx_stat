@@ -204,6 +204,43 @@ public class JedisUtils {
         return value;
     }
 
+
+    public static List<String> getDropList(String redisPoolKey, String key) {
+        List<String> value = null;
+        Jedis jedis = null;
+        try {
+            jedis = getResource(redisPoolKey);
+            if (jedis.exists(key)) {
+                value = jedis.blpop(100 , key );
+                logger.info("getList {} = {}", key, value);
+            }
+        } catch (Exception e) {
+            logger.info("getList {} = {}", key, value, e);
+        } finally {
+            returnResource(redisPoolKey, jedis);
+        }
+        return value;
+    }
+
+
+    public static String getRpopList(String redisPoolKey, String key) {
+        String value = null;
+        Jedis jedis = null;
+        try {
+            jedis = getResource(redisPoolKey);
+            if (jedis.exists(key)) {
+                value = jedis.rpop(key );
+                logger.info("getList {} = {}", key, value);
+            }
+        } catch (Exception e) {
+            logger.info("getList {} = {}", key, value, e);
+        } finally {
+            returnResource(redisPoolKey, jedis);
+        }
+        return value;
+    }
+
+
     /**
      * 获取List缓存
      *

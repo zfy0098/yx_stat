@@ -23,6 +23,7 @@ public class JedisPoolConfigInfo extends JedisPoolConfigAbstract {
 
     public static String kafkaOffsetRedisPoolKey = "kafkaOffset";
 
+    public static String iosClickPoolKey = "iosClick";
 
     private JedisPoolConfigInfo() {
 
@@ -51,6 +52,18 @@ public class JedisPoolConfigInfo extends JedisPoolConfigAbstract {
         int dataIndex = Integer.parseInt(PropertyUtils.getValue("kafka.offset.redis.dataIndex"));
         JedisPool kafkaOffsetRedis = new JedisPool(getJedisPoolConfig() , kafkaOffsetHost , kafkaOffsetPort , timeOut , kafkaOffsetPassword , dataIndex);
         jedisPoolMap.put(kafkaOffsetRedisPoolKey , kafkaOffsetRedis);
+
+
+        /**
+         *  保存 ios click id
+         */
+        String iosClickHost = PropertyUtils.getValue("redis.ios.click.redis.host");
+        int iosClickPort = Integer.parseInt(PropertyUtils.getValue("redis.ios.click.redis.port"));
+        String iosClickPassword = PropertyUtils.getValue("redis.ios.click.redis.password");
+        int iosClickDataIndex = Integer.parseInt(PropertyUtils.getValue("redis.ios.click.redis.dataIndex"));
+        JedisPool iosClickRedis = new JedisPool(getJedisPoolConfig() , iosClickHost , iosClickPort , timeOut , iosClickPassword , iosClickDataIndex);
+        jedisPoolMap.put(iosClickPoolKey , iosClickRedis);
+
 
 
     }

@@ -41,21 +41,21 @@ public class StatUserRegisterLoginAppIDDao extends StatDataBase implements Seria
      * @return
      */
     public int saveAppIDRegisterLoginCount(String date, int appID, long appIDLoginCount, long appIDGuestRegisterCount, long appIDAccountRegisterCount, long appIDPhoneRegisterCount,
-                                           long appIDQQRegisterCount, long appIDWXRegisterCount, long appIDTotalRegisterCount) {
+                                           long appIDQQRegisterCount, long appIDWXRegisterCount, long appIDOtherRegisterCount, long appIDTotalRegisterCount) {
         String querySql = "select id from stat_user_register_login_app_id where app_id =? and date = ?";
         Map<String, Object> map = queryForMap(querySql, new Object[]{appID, date});
         if (map == null || map.isEmpty()) {
             // 没有数据 插入一条
             String insertSQL = "insert into stat_user_register_login_app_id (app_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count," +
-                    " wx_register_count, total_register_count, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+                    " wx_register_count, other_register_count, total_register_count, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
             return executeSql(insertSQL, new Object[]{appID, appIDLoginCount, appIDGuestRegisterCount, appIDAccountRegisterCount, appIDPhoneRegisterCount, appIDQQRegisterCount, appIDWXRegisterCount,
-                    appIDTotalRegisterCount, date});
+                    appIDOtherRegisterCount, appIDTotalRegisterCount, date});
         } else {
             //  存在数据  更新操作
             String sql = "update stat_user_register_login_app_id set login_count = ?, guest_register_count = ?, account_register_count = ?," +
-                    " phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count = ? where app_id = ? and date = ? ";
+                    " phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , other_register_count = ?, total_register_count = ? where app_id = ? and date = ? ";
             return executeSql(sql, new Object[]{appIDLoginCount, appIDGuestRegisterCount, appIDAccountRegisterCount, appIDPhoneRegisterCount, appIDQQRegisterCount, appIDWXRegisterCount,
-                    appIDTotalRegisterCount, appID, date});
+                    appIDOtherRegisterCount, appIDTotalRegisterCount, appID, date});
         }
     }
 
@@ -74,7 +74,7 @@ public class StatUserRegisterLoginAppIDDao extends StatDataBase implements Seria
      * @return
      */
     public int saveAppIDMinuteRegisterLoginCount(String time, int appID, long appIDLoginCount, long appIDGuestRegisterCount, long appIDAccountRegisterCount, long appIDPhoneRegisterCount,
-                                                 long appIDQQRegisterCount, long appIDWXRegisterCount, long appIDTotalRegisterCount) {
+                                                 long appIDQQRegisterCount, long appIDWXRegisterCount, long appIDOtherRegisterCount, long appIDTotalRegisterCount) {
 
         String tableName = "stat_user_register_login_app_id_minute_" + time.substring(0, 7).replace("-", "");
 
@@ -83,15 +83,15 @@ public class StatUserRegisterLoginAppIDDao extends StatDataBase implements Seria
         if (map == null || map.isEmpty()) {
             // 没有数据 插入一条
             String insertSQL = "insert into " + tableName + " (app_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count," +
-                    " wx_register_count, total_register_count, time) values (?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+                    " wx_register_count, other_register_count, total_register_count, time) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
             return executeSql(insertSQL, new Object[]{appID, appIDLoginCount, appIDGuestRegisterCount, appIDAccountRegisterCount, appIDPhoneRegisterCount, appIDQQRegisterCount, appIDWXRegisterCount,
-                    appIDTotalRegisterCount, time});
+                    appIDOtherRegisterCount, appIDTotalRegisterCount, time});
         } else {
             //  存在数据  更新操作
             String sql = "update " + tableName + " set login_count = ?, guest_register_count = ?, account_register_count = ?," +
-                    " phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count = ? where app_id = ? and time = ? ";
+                    " phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , other_register_count = ? , total_register_count = ? where app_id = ? and time = ? ";
             return executeSql(sql, new Object[]{appIDLoginCount, appIDGuestRegisterCount, appIDAccountRegisterCount, appIDPhoneRegisterCount, appIDQQRegisterCount, appIDWXRegisterCount,
-                    appIDTotalRegisterCount, appID, time});
+                    appIDOtherRegisterCount , appIDTotalRegisterCount, appID, time});
         }
     }
 }

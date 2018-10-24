@@ -27,6 +27,11 @@ public enum RegisterType {
      * WX 注册
      */
     WX_REGISTER(5),
+
+    /**
+     *  其他注册
+     */
+    OTHER_REGISTER(6),
     /**
      * 未知
      */

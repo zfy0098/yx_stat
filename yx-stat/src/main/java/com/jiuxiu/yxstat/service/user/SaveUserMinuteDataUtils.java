@@ -36,13 +36,14 @@ public class SaveUserMinuteDataUtils {
         long appIDPhoneRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_ID_REGISTER_COUNT + appID + ":" + RegisterType.PHONE_REGISTER.getType());
         long appIDQQRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_ID_REGISTER_COUNT + appID + ":" + RegisterType.QQ_REGISTER.getType());
         long appIDWXRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_ID_REGISTER_COUNT + appID + ":" + RegisterType.WX_REGISTER.getType());
-        long appIDTotalRegisterCount = appIDGuestRegisterCount + appIDAccountRegisterCount + appIDPhoneRegisterCount + appIDQQRegisterCount + appIDWXRegisterCount;
+        long appIDOtherRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_ID_REGISTER_COUNT + appID + ":" + RegisterType.OTHER_REGISTER.getType());
+        long appIDTotalRegisterCount = appIDGuestRegisterCount + appIDAccountRegisterCount + appIDPhoneRegisterCount + appIDQQRegisterCount + appIDWXRegisterCount + appIDOtherRegisterCount;
         long appIDLoginCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_ID_LOGIN_COUNT + appID);
 
         if (appIDGuestRegisterCount != 0 || appIDAccountRegisterCount != 0 || appIDPhoneRegisterCount != 0 || appIDQQRegisterCount != 0
                 || appIDWXRegisterCount != 0 || appIDLoginCount != 0 ) {
             statUserRegisterLoginAppIDDao.saveAppIDMinuteRegisterLoginCount(time , appID, appIDLoginCount, appIDGuestRegisterCount, appIDAccountRegisterCount, appIDPhoneRegisterCount,
-                    appIDQQRegisterCount, appIDWXRegisterCount, appIDTotalRegisterCount);
+                    appIDQQRegisterCount, appIDWXRegisterCount, appIDOtherRegisterCount, appIDTotalRegisterCount);
         }
 
         long childIDGuestRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHILD_ID_REGISTER_COUNT + childID + ":" + appID + ":" + RegisterType.GUEST_REGISTER.getType());
@@ -50,12 +51,13 @@ public class SaveUserMinuteDataUtils {
         long childIDPhoneRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHILD_ID_REGISTER_COUNT + childID + ":" + appID + ":" + RegisterType.PHONE_REGISTER.getType());
         long childIDQQRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHILD_ID_REGISTER_COUNT + childID + ":" + appID + ":" + RegisterType.QQ_REGISTER.getType());
         long childIDWXRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHILD_ID_REGISTER_COUNT + childID + ":" + appID + ":" + RegisterType.WX_REGISTER.getType());
-        long childIDTotalRegisterCount = childIDGuestRegisterCount + childIDAccountRegisterCount + childIDPhoneRegisterCount + childIDQQRegisterCount + childIDWXRegisterCount;
+        long childIDOtherRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHILD_ID_REGISTER_COUNT + childID + ":" + appID + ":" + RegisterType.OTHER_REGISTER.getType());
+        long childIDTotalRegisterCount = childIDGuestRegisterCount + childIDAccountRegisterCount + childIDPhoneRegisterCount + childIDQQRegisterCount + childIDWXRegisterCount + childIDOtherRegisterCount;
         long childIDLoginCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHILD_ID_LOGIN_COUNT + childID + ":" + appID);
 
         if (childIDGuestRegisterCount != 0 || childIDAccountRegisterCount != 0 || childIDPhoneRegisterCount != 0 || childIDQQRegisterCount != 0
                 || childIDWXRegisterCount != 0 || childIDLoginCount != 0 ) {
-            statUserRegisterLoginChildIDDao.saveChildIDMinuteRegisterLoginCount(time ,appID, childID, childIDLoginCount, childIDGuestRegisterCount, childIDAccountRegisterCount, childIDPhoneRegisterCount, childIDQQRegisterCount, childIDWXRegisterCount, childIDTotalRegisterCount);
+            statUserRegisterLoginChildIDDao.saveChildIDMinuteRegisterLoginCount(time ,appID, childID, childIDLoginCount, childIDGuestRegisterCount, childIDAccountRegisterCount, childIDPhoneRegisterCount, childIDQQRegisterCount, childIDWXRegisterCount, childIDOtherRegisterCount, childIDTotalRegisterCount);
         }
 
         long channelIDGuestRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHANNEL_ID_REGISTER_COUNT + channelID + ":" + childID + ":" + appID + ":" + RegisterType.GUEST_REGISTER.getType());
@@ -63,13 +65,14 @@ public class SaveUserMinuteDataUtils {
         long channelIDPhoneRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHANNEL_ID_REGISTER_COUNT + channelID + ":" + childID + ":" + appID + ":" + RegisterType.PHONE_REGISTER.getType());
         long channelIDQQRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHANNEL_ID_REGISTER_COUNT + channelID + ":" + childID + ":" + appID + ":" + RegisterType.QQ_REGISTER.getType());
         long channelIDWXRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHANNEL_ID_REGISTER_COUNT + channelID + ":" + childID + ":" + appID + ":" + RegisterType.WX_REGISTER.getType());
-        long channelIDTotalRegisterCount = channelIDGuestRegisterCount + channelIDAccountRegisterCount + channelIDPhoneRegisterCount + channelIDQQRegisterCount + channelIDWXRegisterCount;
+        long channelIDOtherRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHANNEL_ID_REGISTER_COUNT + channelID + ":" + childID + ":" + appID + ":" + RegisterType.OTHER_REGISTER.getType());
+        long channelIDTotalRegisterCount = channelIDGuestRegisterCount + channelIDAccountRegisterCount + channelIDPhoneRegisterCount + channelIDQQRegisterCount + channelIDWXRegisterCount + channelIDOtherRegisterCount;
         long channelIDLoginCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.CHANNEL_ID_LOGIN_COUNT + channelID + ":" + childID + ":" + appID);
 
         if (channelIDGuestRegisterCount != 0 || channelIDAccountRegisterCount != 0 || channelIDPhoneRegisterCount != 0 || channelIDQQRegisterCount != 0
                 || channelIDWXRegisterCount != 0 || channelIDLoginCount != 0 ) {
             statUserRegisterLoginChannelIDDao.saveChannelIDMinuteRegisterLoginCount(time, appID, childID, channelID, channelIDLoginCount, channelIDGuestRegisterCount, channelIDAccountRegisterCount,
-                    channelIDPhoneRegisterCount, channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDTotalRegisterCount);
+                    channelIDPhoneRegisterCount, channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDOtherRegisterCount, channelIDTotalRegisterCount);
         }
 
         long appChannelIDGuestRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_CHANNEL_ID_REGISTER_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.GUEST_REGISTER.getType());
@@ -77,13 +80,14 @@ public class SaveUserMinuteDataUtils {
         long appChannelIDPhoneRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_CHANNEL_ID_REGISTER_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.PHONE_REGISTER.getType());
         long appChannelIDQQRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_CHANNEL_ID_REGISTER_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.QQ_REGISTER.getType());
         long appChannelIDWXRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_CHANNEL_ID_REGISTER_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.WX_REGISTER.getType());
-        long appChannelIDTotalRegisterCount = appChannelIDGuestRegisterCount + appChannelIDAccountRegisterCount + appChannelIDPhoneRegisterCount + appChannelIDQQRegisterCount + appChannelIDWXRegisterCount;
+        long appChannelIDOtherRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_CHANNEL_ID_REGISTER_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.OTHER_REGISTER.getType());
+        long appChannelIDTotalRegisterCount = appChannelIDGuestRegisterCount + appChannelIDAccountRegisterCount + appChannelIDPhoneRegisterCount + appChannelIDQQRegisterCount + appChannelIDWXRegisterCount + appChannelIDOtherRegisterCount;
         long appChannelIDLoginCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.APP_CHANNEL_ID_LOGIN_COUNT + appChannelID + ":" + channelID + ":" + childID + ":" + appID);
 
         if (appChannelIDGuestRegisterCount != 0 || appChannelIDAccountRegisterCount != 0 || appChannelIDPhoneRegisterCount != 0 || appChannelIDQQRegisterCount != 0
                 || appChannelIDWXRegisterCount != 0 || appChannelIDLoginCount != 0 ) {
             statUserRegisterLoginAppChannelIDDao.saveAppChannelIDMinuteRegisterLoginCount(time, appID, childID, channelID, appChannelID, appChannelIDLoginCount, appChannelIDGuestRegisterCount,
-                    appChannelIDAccountRegisterCount, appChannelIDPhoneRegisterCount, appChannelIDQQRegisterCount, appChannelIDWXRegisterCount, appChannelIDTotalRegisterCount);
+                    appChannelIDAccountRegisterCount, appChannelIDPhoneRegisterCount, appChannelIDQQRegisterCount, appChannelIDWXRegisterCount, appChannelIDOtherRegisterCount, appChannelIDTotalRegisterCount);
         }
 
         long packageIDGuestRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PACKAGE_ID_REGISTER_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.GUEST_REGISTER.getType());
@@ -91,13 +95,14 @@ public class SaveUserMinuteDataUtils {
         long packageIDPhoneRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PACKAGE_ID_REGISTER_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.PHONE_REGISTER.getType());
         long packageIDQQRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PACKAGE_ID_REGISTER_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.QQ_REGISTER.getType());
         long packageIDWXRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PACKAGE_ID_REGISTER_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.WX_REGISTER.getType());
-        long packageIDTotalRegisterCount = packageIDGuestRegisterCount + packageIDAccountRegisterCount + packageIDPhoneRegisterCount + packageIDQQRegisterCount + packageIDWXRegisterCount;
+        long packageIDOtherRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PACKAGE_ID_REGISTER_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID + ":" + RegisterType.OTHER_REGISTER.getType());
+        long packageIDTotalRegisterCount = packageIDGuestRegisterCount + packageIDAccountRegisterCount + packageIDPhoneRegisterCount + packageIDQQRegisterCount + packageIDWXRegisterCount + packageIDOtherRegisterCount ;
         long packageIDLoginCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PACKAGE_ID_LOGIN_COUNT + packageID + ":" + appChannelID + ":" + channelID + ":" + childID + ":" + appID);
 
         if (packageIDGuestRegisterCount != 0 || packageIDAccountRegisterCount != 0 || packageIDPhoneRegisterCount != 0 || packageIDQQRegisterCount != 0
                 || packageIDWXRegisterCount != 0 || packageIDLoginCount != 0 ) {
             statUserRegisterLoginPackageIDDao.savePackageIDMinuteRegisterLoginCount(time, appID, childID, channelID, appChannelID, packageID, packageIDLoginCount, packageIDGuestRegisterCount, packageIDAccountRegisterCount,
-                    packageIDPhoneRegisterCount, packageIDQQRegisterCount, packageIDWXRegisterCount, packageIDTotalRegisterCount);
+                    packageIDPhoneRegisterCount, packageIDQQRegisterCount, packageIDWXRegisterCount, packageIDOtherRegisterCount, packageIDTotalRegisterCount);
         }
     }
 }

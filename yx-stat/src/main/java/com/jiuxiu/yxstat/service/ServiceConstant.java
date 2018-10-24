@@ -19,6 +19,11 @@ public class ServiceConstant {
     public static final int DEVICE_ACTIVATION_EXPIRE_TIME = 60 * 60 * 24 * 7;
 
     /**
+     *   激活信息存储时间
+     */
+    public static final int ACTIVATION_INFO_EXPIRE_TIME = 60 * 60;
+
+    /**
      * 登录用户信息有效期 90天
      */
     public static final int USER_INFO_REDIS_EXPIRE_TIME = 60 * 60 * 24 * 90;

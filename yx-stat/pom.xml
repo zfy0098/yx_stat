@@ -22,17 +22,20 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.30</version>
+            <scope>${maven.scope}</scope>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
             <version>1.0.18</version>
+            <scope>${maven.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>2.5.1</version>
+            <scope>${maven.scope}</scope>
         </dependency>
 
         <dependency>
@@ -43,7 +46,7 @@
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-to-slf4j</artifactId>
+                <artifactId>log4j-to-slf4j</artifactId>
             <version>2.7</version>
         </dependency>
 
@@ -51,13 +54,16 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.25</version>
+            <scope>${maven.scope}</scope>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.7.25</version>
+            <scope>${maven.scope}</scope>
         </dependency>
+
 
 
         <!-- json jar包 -->
@@ -94,6 +100,7 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
             <version>2.3.0</version>
+            <scope>${maven.scope}</scope>
         </dependency>
 
         <dependency>
@@ -139,6 +146,8 @@
             <artifactId>logback-classic</artifactId>
             <version>1.1.7</version>
         </dependency>
+
+
     </dependencies>
 
     <build>
@@ -150,7 +159,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.jiuxiu.yxstat.service.pay.PayStatisticsDataMain</mainClass>
+                            <mainClass>com.jiuxiu.yxstat.service.deviceinstall.IOSActivationDataServiceNew</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -176,7 +185,7 @@
                 <version>2.5</version>
                 <configuration>
                     <excludes>
-                        <exclude>test.db.properties</exclude>
+                        <exclude>test.db.properties</ exclude>
                     </excludes>
                 </configuration>
                 <executions>

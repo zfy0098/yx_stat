@@ -39,17 +39,17 @@ public class UserRegisterLoginDao extends StatDataBase implements Serializable {
      * @return
      */
     public int savePlatformUserRegisterLoginCount(String date, long loginCount, long guestRegisterCount, long accountRegisterCount, long phoneRegisterCount,
-                                                  long qqRegisterCount, long wxRegisterCount) {
+                                                  long qqRegisterCount, long wxRegisterCount, long otherRegisterCount) {
         String querySQL = "select id from stat_user_register_login where date = ?";
         Map<String, Object> map = queryForMap(querySQL, new Object[]{date});
         if (map == null || map.isEmpty()) {
-            String sql = "insert into stat_user_register_login (login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, date )" +
-                    " values (?,?,?,?,?,?,?)";
-            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, date});
+            String sql = "insert into stat_user_register_login (login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, other_register_count, date )" +
+                    " values (?,?,?,?,?,?,?,?)";
+            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, otherRegisterCount, date});
         } else {
             String sql = "update stat_user_register_login set login_count=?, guest_register_count=?, account_register_count=?, phone_register_count=?," +
-                    " qq_register_count=?, wx_register_count=? where date = ?";
-            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, date});
+                    " qq_register_count=?, wx_register_count=? , other_register_count = ? where date = ?";
+            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, otherRegisterCount, date});
         }
     }
 
@@ -67,17 +67,17 @@ public class UserRegisterLoginDao extends StatDataBase implements Serializable {
      * @return
      */
     public int savePlatformMinuteRegisterLoginCount(String time, long loginCount, long guestRegisterCount, long accountRegisterCount, long phoneRegisterCount,
-                                                    long qqRegisterCount, long wxRegisterCount) {
+                                                    long qqRegisterCount, long wxRegisterCount , long otherRegisterCount) {
         String querySQL = "select id from stat_user_register_login_minute where time = ?";
         Map<String, Object> map = queryForMap(querySQL, new Object[]{time});
         if (map == null || map.isEmpty()) {
-            String sql = "insert into stat_user_register_login_minute (login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, time )" +
-                    " values (?,?,?,?,?,?,?)";
-            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, time});
+            String sql = "insert into stat_user_register_login_minute (login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, other_register_count, time )" +
+                    " values (?,?,?,?,?,?,?,?)";
+            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, otherRegisterCount, time});
         } else {
             String sql = "update stat_user_register_login_minute set login_count=?, guest_register_count=?, account_register_count=?, phone_register_count=?," +
-                    " qq_register_count=?, wx_register_count=? where time = ?";
-            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, time});
+                    " qq_register_count=?, wx_register_count=? , other_register_count = ? where time = ?";
+            return executeSql(sql, new Object[]{loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount, otherRegisterCount, time});
         }
     }
 }

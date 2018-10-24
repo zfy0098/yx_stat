@@ -43,7 +43,7 @@ public class StatUserRegisterLoginChannelIDDao extends StatDataBase implements S
      * @return
      */
     public int saveChannelIDRegisterLoginCount(String date, int appID, int childID, int channelID, long channelIDLoginCount, long channelIDGuestRegisterCount, long channelIDAccountRegisterCount,
-                                               long channelIDPhoneRegisterCount, long channelIDQQRegisterCount, long channelIDWXRegisterCount, long channelIDTotalRegisterCount) {
+                                               long channelIDPhoneRegisterCount, long channelIDQQRegisterCount, long channelIDWXRegisterCount, long channelIDOtherRegisterCount, long channelIDTotalRegisterCount) {
 
         String tableName = "stat_user_register_login_channel_id_" + date.substring(0, 4);
 
@@ -51,14 +51,14 @@ public class StatUserRegisterLoginChannelIDDao extends StatDataBase implements S
         Map<String, Object> map = queryForMap(querySQL, new Object[]{appID, childID, channelID, date});
         if (map == null || map.isEmpty()) {
             // 没有数据
-            String insertSQL = "insert into " + tableName + " (app_id, child_id, channel_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, total_register_count, date) values (?,?,?,?,?,?,?,?,?,?,?) ";
+            String insertSQL = "insert into " + tableName + " (app_id, child_id, channel_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, other_register_count, total_register_count, date) values (?,?,?,?,?,?,?,?,?,?,?,?) ";
             return executeSql(insertSQL, new Object[]{appID, childID, channelID, channelIDLoginCount, channelIDGuestRegisterCount, channelIDAccountRegisterCount,
-                    channelIDPhoneRegisterCount, channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDTotalRegisterCount, date});
+                    channelIDPhoneRegisterCount, channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDOtherRegisterCount, channelIDTotalRegisterCount, date});
         } else {
-            String sql = "update " + tableName + " set login_count = ?, guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count=? " +
+            String sql = "update " + tableName + " set login_count = ?, guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , other_register_count =?  , total_register_count=? " +
                     " where  app_id=? and  child_id=? and channel_id=? and date=? ";
             return executeSql(sql, new Object[]{channelIDLoginCount, channelIDGuestRegisterCount, channelIDAccountRegisterCount, channelIDPhoneRegisterCount,
-                    channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDTotalRegisterCount, appID, childID, channelID, date});
+                    channelIDQQRegisterCount, channelIDWXRegisterCount,channelIDOtherRegisterCount, channelIDTotalRegisterCount, appID, childID, channelID, date});
         }
     }
 
@@ -78,21 +78,21 @@ public class StatUserRegisterLoginChannelIDDao extends StatDataBase implements S
      * @return
      */
     public int saveChannelIDMinuteRegisterLoginCount(String time, int appID, int childID, int channelID, long channelIDLoginCount, long channelIDGuestRegisterCount, long channelIDAccountRegisterCount,
-                                                     long channelIDPhoneRegisterCount, long channelIDQQRegisterCount, long channelIDWXRegisterCount, long channelIDTotalRegisterCount) {
+                                                     long channelIDPhoneRegisterCount, long channelIDQQRegisterCount, long channelIDWXRegisterCount, long channelIDOtherRegisterCount, long channelIDTotalRegisterCount) {
         String tableName = "stat_user_register_login_channel_id_minute_" + time.substring(0, 7).replace("-", "");
 
         String querySQL = "select id from " + tableName + " where app_id=? and  child_id=? and channel_id=? and time=? ";
         Map<String, Object> map = queryForMap(querySQL, new Object[]{appID, childID, channelID, time});
         if (map == null || map.isEmpty()) {
             // 没有数据
-            String insertSQL = "insert into " + tableName + " (app_id, child_id, channel_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, total_register_count, time) values (?,?,?,?,?,?,?,?,?,?,?) ";
+            String insertSQL = "insert into " + tableName + " (app_id, child_id, channel_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, other_register_count, total_register_count, time) values (?,?,?,?,?,?,?,?,?,?,?,?) ";
             return executeSql(insertSQL, new Object[]{appID, childID, channelID, channelIDLoginCount, channelIDGuestRegisterCount, channelIDAccountRegisterCount,
-                    channelIDPhoneRegisterCount, channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDTotalRegisterCount, time});
+                    channelIDPhoneRegisterCount, channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDOtherRegisterCount, channelIDTotalRegisterCount, time});
         } else {
-            String sql = "update " + tableName + " set login_count = ?, guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count=? " +
+            String sql = "update " + tableName + " set login_count = ?, guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , other_register_count = ? ,  total_register_count=? " +
                     " where  app_id=? and  child_id=? and channel_id=? and time=? ";
             return executeSql(sql, new Object[]{channelIDLoginCount, channelIDGuestRegisterCount, channelIDAccountRegisterCount, channelIDPhoneRegisterCount,
-                    channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDTotalRegisterCount, appID, childID, channelID, time});
+                    channelIDQQRegisterCount, channelIDWXRegisterCount, channelIDOtherRegisterCount, channelIDTotalRegisterCount, appID, childID, channelID, time});
         }
     }
 }

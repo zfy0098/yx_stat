@@ -46,7 +46,7 @@ public class StatUserRegisterLoginPackageIDDao extends StatDataBase implements S
      * @return
      */
     public int savePackageIDRegisterLoginCount(String date, int appID, int childID, int channelID, int appChannelID, int packageID, long packageIDLoginCount, long packageIDGuestRegisterCount, long packageIDAccountRegisterCount,
-                                               long packageIDPhoneRegisterCount, long packageIDQQRegisterCount, long packageIDWXRegisterCount, long packageIDTotalRegisterCount) {
+                                               long packageIDPhoneRegisterCount, long packageIDQQRegisterCount, long packageIDWXRegisterCount, long packageIDOtherRegisterCount, long packageIDTotalRegisterCount) {
 
         String tableName = "stat_user_register_login_package_id_" + date.substring(0, 4);
 
@@ -54,14 +54,14 @@ public class StatUserRegisterLoginPackageIDDao extends StatDataBase implements S
         Map<String, Object> map = queryForMap(querySQL, new Object[]{appID, childID, channelID, appChannelID, packageID, date});
         if (map == null || map.isEmpty()) {
             String insertSQL = "insert into " + tableName + " (app_id, child_id, channel_id, app_channel_id, package_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count," +
-                    " wx_register_count, total_register_count, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?) ";
+                    " wx_register_count, other_register_count, total_register_count, date) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?) ";
             return executeSql(insertSQL, new Object[]{appID, childID, channelID, appChannelID, packageID, packageIDLoginCount, packageIDGuestRegisterCount, packageIDAccountRegisterCount,
-                    packageIDPhoneRegisterCount, packageIDQQRegisterCount, packageIDWXRegisterCount, packageIDTotalRegisterCount, date});
+                    packageIDPhoneRegisterCount, packageIDQQRegisterCount, packageIDWXRegisterCount, packageIDOtherRegisterCount, packageIDTotalRegisterCount, date});
         } else {
-            String sql = "update " + tableName + " set login_count = ? , guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count=?" +
+            String sql = "update " + tableName + " set login_count = ? , guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? ,  other_register_count = ?, total_register_count=?" +
                     " where app_id = ? and child_id = ? and channel_id = ? and app_channel_id = ? and package_id = ? and date = ?";
             return executeSql(sql, new Object[]{packageIDLoginCount, packageIDGuestRegisterCount, packageIDAccountRegisterCount, packageIDPhoneRegisterCount, packageIDQQRegisterCount,
-                    packageIDWXRegisterCount, packageIDTotalRegisterCount, appID, childID, channelID, appChannelID, packageID, date});
+                    packageIDWXRegisterCount,  packageIDOtherRegisterCount, packageIDTotalRegisterCount, appID, childID, channelID, appChannelID, packageID, date});
         }
     }
 
@@ -85,7 +85,7 @@ public class StatUserRegisterLoginPackageIDDao extends StatDataBase implements S
      * @return
      */
     public int savePackageIDMinuteRegisterLoginCount(String time, int appID, int childID, int channelID, int appChannelID, int packageID, long packageIDLoginCount, long packageIDGuestRegisterCount, long packageIDAccountRegisterCount,
-                                                     long packageIDPhoneRegisterCount, long packageIDQQRegisterCount, long packageIDWXRegisterCount, long packageIDTotalRegisterCount) {
+                                                     long packageIDPhoneRegisterCount, long packageIDQQRegisterCount, long packageIDWXRegisterCount, long packageIDOtherRegisterCount, long packageIDTotalRegisterCount) {
 
         String tableName = "stat_user_register_login_package_id_minute_" + time.substring(0, 7).replace("-", "");
 
@@ -93,14 +93,14 @@ public class StatUserRegisterLoginPackageIDDao extends StatDataBase implements S
         Map<String, Object> map = queryForMap(querySQL, new Object[]{appID, childID, channelID, appChannelID, packageID, time});
         if (map == null || map.isEmpty()) {
             String insertSQL = "insert into " + tableName + " (app_id, child_id, channel_id, app_channel_id, package_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count," +
-                    " wx_register_count, total_register_count, time) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?) ";
+                    " wx_register_count, other_register_count, total_register_count, time) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?) ";
             return executeSql(insertSQL, new Object[]{appID, childID, channelID, appChannelID, packageID, packageIDLoginCount, packageIDGuestRegisterCount, packageIDAccountRegisterCount,
-                    packageIDPhoneRegisterCount, packageIDQQRegisterCount, packageIDWXRegisterCount, packageIDTotalRegisterCount, time});
+                    packageIDPhoneRegisterCount, packageIDQQRegisterCount, packageIDWXRegisterCount, packageIDOtherRegisterCount, packageIDTotalRegisterCount, time});
         } else {
-            String sql = "update " + tableName + " set login_count = ? , guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count=?" +
+            String sql = "update " + tableName + " set login_count = ? , guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ?, other_register_count = ?, total_register_count=?" +
                     " where app_id = ? and child_id = ? and channel_id = ? and app_channel_id = ? and package_id = ? and time = ?";
             return executeSql(sql, new Object[]{packageIDLoginCount, packageIDGuestRegisterCount, packageIDAccountRegisterCount, packageIDPhoneRegisterCount, packageIDQQRegisterCount,
-                    packageIDWXRegisterCount, packageIDTotalRegisterCount, appID, childID, channelID, appChannelID, packageID, time});
+                    packageIDWXRegisterCount, packageIDOtherRegisterCount, packageIDTotalRegisterCount, appID, childID, channelID, appChannelID, packageID, time});
         }
     }
 }

@@ -63,6 +63,14 @@ public class UserStatisticsMain implements Serializable {
             @Override
             public void call(JavaRDD<ConsumerRecord<String, String>> consumer) {
 
+
+                String isExit = JedisUtils.get(JedisPoolConfigInfo.kafkaOffsetRedisPoolKey , topics );
+                if("1".equals(isExit)){
+                    log.info("redis 获取 isExit 为：" + isExit + " , 程序退出 ");
+                    System.exit(1);
+                }
+
+
                 JavaRDD<JSONObject> javaRDD = consumer.map(new Function<ConsumerRecord<String, String>, JSONObject>() {
                     @Override
                     public JSONObject call(ConsumerRecord<String, String> consumerRecord) throws Exception {

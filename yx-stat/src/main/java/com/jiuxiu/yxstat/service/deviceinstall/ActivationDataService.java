@@ -73,16 +73,7 @@ public class ActivationDataService implements Serializable {
                     @Override
                     public JSONObject call(ConsumerRecord<String, String> consumerRecord) throws Exception {
                         String value = consumerRecord.value();
-                        String[] data =  value.split("#device_install#");
-                        if(data.length == 3){
-                            return JSONObject.fromObject(data[1]);
-                        }
-                        try {
-                            return JSONObject.fromObject(value);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        return null;
+                        return JSONObject.fromObject(value);
                     }
                 });
 
@@ -115,12 +106,15 @@ public class ActivationDataService implements Serializable {
                     Thread platformIOSTask = new Thread(new PlatformIOSActivationDataService(ios));
                     platformIOSTask.start();
 
+
                     // 计算 android 数据
                     Thread androidTask = new Thread(new AndroidActivationDataService(android));
                     androidTask.start();
 
                     // 计算 ios 数据
-                    Thread iosTask = new Thread(new IOSActivationDataService(ios));
+                    /*Thread iosTask = new Thread(new IOSActivationDataService(ios));
+                    iosTask.start();*/
+                    Thread iosTask = new Thread(new IOSActivationDataServiceNew(ios));
                     iosTask.start();
 
                     consumer.foreach(x -> {

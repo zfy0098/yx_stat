@@ -43,22 +43,22 @@ public class StatUserRegisterLoginChildIDDao extends StatDataBase implements Ser
      * @return
      */
     public int saveChildIDRegisterLoginCount(String date, int appID, long childID, long childIDLoginCount, long childIDGuestRegisterCount, long childIDAccountRegisterCount,
-                                             long childIDPhoneRegisterCount, long childIDQQRegisterCount, long childIDWXRegisterCount, long childIDTotalRegisterCount) {
+                                             long childIDPhoneRegisterCount, long childIDQQRegisterCount, long childIDWXRegisterCount, long childIDOtherRegisterCount, long childIDTotalRegisterCount) {
 
         String querySQL = "select id from stat_user_register_login_child_id where app_id = ? and child_id = ? and date = ?";
         Map<String, Object> map = queryForMap(querySQL, new Object[]{appID, childID, date});
         if (map == null || map.isEmpty()) {
             // 没有数据 插入一条
-            String insertSQL = "insert into stat_user_register_login_child_id (app_id, child_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, total_register_count, date)" +
-                    " values (?,?,?,?,?,?,?,?,?,?)";
+            String insertSQL = "insert into stat_user_register_login_child_id (app_id, child_id, login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, other_register_count, total_register_count, date)" +
+                    " values (?,?,?,?,?,?,?,?,?,?,?)";
             return executeSql(insertSQL, new Object[]{appID, childID, childIDLoginCount, childIDGuestRegisterCount, childIDAccountRegisterCount, childIDPhoneRegisterCount,
-                    childIDQQRegisterCount, childIDWXRegisterCount, childIDTotalRegisterCount, date});
+                    childIDQQRegisterCount, childIDWXRegisterCount, childIDOtherRegisterCount, childIDTotalRegisterCount, date});
         } else {
             // 数据存在 更新数据
-            String sql = "update stat_user_register_login_child_id set login_count=?, guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count=?" +
+            String sql = "update stat_user_register_login_child_id set login_count=?, guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , other_register_count = ?, total_register_count=?" +
                     " where app_id = ? and child_id = ? and date = ?";
             return executeSql(sql, new Object[]{childIDLoginCount, childIDGuestRegisterCount, childIDAccountRegisterCount, childIDPhoneRegisterCount, childIDQQRegisterCount,
-                    childIDWXRegisterCount, childIDTotalRegisterCount, appID, childID, date});
+                    childIDWXRegisterCount, childIDOtherRegisterCount, childIDTotalRegisterCount, appID, childID, date});
         }
     }
 
@@ -79,7 +79,7 @@ public class StatUserRegisterLoginChildIDDao extends StatDataBase implements Ser
      * @return
      */
     public int saveChildIDMinuteRegisterLoginCount(String time, int appID, long childID, long childIDLoginCount, long childIDGuestRegisterCount, long childIDAccountRegisterCount,
-                                                   long childIDPhoneRegisterCount, long childIDQQRegisterCount, long childIDWXRegisterCount, long childIDTotalRegisterCount) {
+                                                   long childIDPhoneRegisterCount, long childIDQQRegisterCount, long childIDWXRegisterCount, long childIDOtherRegisterCount, long childIDTotalRegisterCount) {
 
         String tableName = "stat_user_register_login_child_id_minute_" + time.substring(0, 7).replace("-", "");
 
@@ -87,14 +87,14 @@ public class StatUserRegisterLoginChildIDDao extends StatDataBase implements Ser
         Map<String, Object> map = queryForMap(querySql, new Object[]{appID, childID, time});
         if (map == null || map.isEmpty()) {
             // 没有数据 插入一条
-            String insertSql = "insert into " + tableName + " (app_id, child_id,login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, total_register_count, time)" +
-                    " values (?,?,?,?,?,?,?,?,?,?)";
-            return executeSql(insertSql, new Object[]{appID, childID, childIDLoginCount, childIDGuestRegisterCount, childIDAccountRegisterCount, childIDPhoneRegisterCount, childIDQQRegisterCount, childIDWXRegisterCount, childIDTotalRegisterCount, time});
+            String insertSql = "insert into " + tableName + " (app_id, child_id,login_count, guest_register_count, account_register_count, phone_register_count, qq_register_count, wx_register_count, other_register_count, total_register_count, time)" +
+                    " values (?,?,?,?,?,?,?,?,?,?,?)";
+            return executeSql(insertSql, new Object[]{appID, childID, childIDLoginCount, childIDGuestRegisterCount, childIDAccountRegisterCount, childIDPhoneRegisterCount, childIDQQRegisterCount, childIDWXRegisterCount, childIDOtherRegisterCount, childIDTotalRegisterCount, time});
         } else {
-            String updateSQL = "update " + tableName + " set login_count = ? , guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , total_register_count=?" +
+            String updateSQL = "update " + tableName + " set login_count = ? , guest_register_count = ?, account_register_count = ?, phone_register_count = ?, qq_register_count = ?, wx_register_count = ? , other_register_count = ?, total_register_count=?" +
                     " where app_id = ? and child_id = ? and time = ?";
             return executeSql(updateSQL, new Object[]{childIDLoginCount, childIDGuestRegisterCount, childIDAccountRegisterCount, childIDPhoneRegisterCount, childIDQQRegisterCount,
-                    childIDWXRegisterCount, childIDTotalRegisterCount, appID, childID, time});
+                    childIDWXRegisterCount, childIDOtherRegisterCount, childIDTotalRegisterCount, appID, childID, time});
         }
     }
 }

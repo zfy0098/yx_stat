@@ -5,6 +5,7 @@ import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatAppIdDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatChannelIdDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatChildDeviceActiveDao;
 import com.jiuxiu.yxstat.dao.stat.deviceinstall.StatPackageIdDeviceActiveDao;
+import com.jiuxiu.yxstat.service.ServiceConstant;
 import com.jiuxiu.yxstat.utils.DateUtil;
 import net.sf.json.JSONObject;
 import org.apache.spark.api.java.JavaRDD;
@@ -47,7 +48,11 @@ public class StartupCountDataService implements Runnable ,  Serializable {
     @Override
     public void run() {
 
-        javaRDD.mapToPair(new PairFunction<JSONObject, String, Integer>() {
+
+        javaRDD.filter(json ->{
+            int x = json.getInt("os");
+            return x == ServiceConstant.ANDROID_OS;
+        }).mapToPair(new PairFunction<JSONObject, String, Integer>() {
             @Override
             public Tuple2<String, Integer> call(JSONObject json) {
                 StringBuffer key = new StringBuffer();

@@ -120,4 +120,20 @@ public class DateUtil {
     public static String secondToDateString(long second, String format) {
         return map.get(format).format(new Date(second * 1000));
     }
+
+
+    /**
+     *    获取指定当天日之前的几天的日期
+     * @param day
+     * @return
+     */
+    public static String getDateAgo(String dateStr , int day , String format) throws Exception{
+        Calendar calendar1 = Calendar.getInstance();
+        SimpleDateFormat sdf1 = new SimpleDateFormat(format);
+        Date date = sdf1.parse(dateStr);
+        calendar1.setTime(date);
+        calendar1.add(Calendar.DATE, -day);
+        String daysAgo = sdf1.format(calendar1.getTime());
+        return  daysAgo;
+    }
 }

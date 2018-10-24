@@ -77,12 +77,14 @@ public class PlatformUserStatisticsDataService implements Runnable, Serializable
                 long phoneRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.PHONE_REGISTER.getType());
                 long qqRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.QQ_REGISTER.getType());
                 long wxRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.WX_REGISTER.getType());
+                long otherRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, toDay + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.OTHER_REGISTER.getType());
+
 
                 int zero = 0;
                 // 保存数据库
                 if (zero != loginCount || zero != guestRegisterCount || zero != accountRegisterCount || zero != phoneRegisterCount ||
                         zero != qqRegisterCount || zero != wxRegisterCount) {
-                    userRegisterLoginDao.savePlatformUserRegisterLoginCount(toDay, loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount);
+                    userRegisterLoginDao.savePlatformUserRegisterLoginCount(toDay, loginCount, guestRegisterCount, accountRegisterCount, phoneRegisterCount, qqRegisterCount, wxRegisterCount , otherRegisterCount);
                 }
 
                 // 分钟数据
@@ -92,9 +94,12 @@ public class PlatformUserStatisticsDataService implements Runnable, Serializable
                 long minutePhoneRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.PHONE_REGISTER.getType());
                 long minuteQQRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.QQ_REGISTER.getType());
                 long minuteWXRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.WX_REGISTER.getType());
+                long minuteOtherRegisterCount = JedisUtils.getSetScard(JedisPoolConfigInfo.statRedisPoolKey, time + JedisUserStatisticsKeyConstant.PLATFORM_REGISTER_COUNT + RegisterType.OTHER_REGISTER.getType());
+
+
 
                 userRegisterLoginDao.savePlatformMinuteRegisterLoginCount(time, minuteLoginCount, minuteGuestRegisterCount, minuteAccountRegisterCount, minutePhoneRegisterCount,
-                        minuteQQRegisterCount, minuteWXRegisterCount);
+                        minuteQQRegisterCount, minuteWXRegisterCount , minuteOtherRegisterCount);
             }
         });
     }
