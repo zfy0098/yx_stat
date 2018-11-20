@@ -43,7 +43,8 @@ public class PayStatisticsDataMain implements Serializable{
                 offset = Long.parseLong(JedisUtils.get(JedisPoolConfigInfo.kafkaOffsetRedisPoolKey, topics + "_" + i));
             } catch (NumberFormatException e) {
                 System.out.println("kafka offset 转换异常：" + e.getMessage());
-                System.exit(1);
+//                System.exit(1);
+                offset = 0;
             }
             topicPartitionMap.put(new TopicPartition(topics, i), offset);
         }

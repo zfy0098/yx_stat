@@ -28,7 +28,7 @@
 
 
     <!-- project default level -->
-    <logger name="guoer_appserv" level="INFO"/>
+    <logger name="yx_stat" level="INFO"/>
 
     <root level="INFO">
         <appender-ref ref="console"/>

@@ -4,13 +4,21 @@ import com.jiuxiu.yxstat.redis.JedisPoolConfigInfo;
 import com.jiuxiu.yxstat.redis.JedisUtils;
 import com.jiuxiu.yxstat.redis.payorder.JedisPayOrderKeyConstant;
 import com.jiuxiu.yxstat.service.ServiceConstant;
+import com.jiuxiu.yxstat.service.deviceinstall.AndroidActivationDataServiceNew;
 import com.jiuxiu.yxstat.utils.DateUtil;
 import net.sf.json.JSONObject;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -80,6 +88,7 @@ public class PayStatisticsDataService implements Serializable {
             Map<String, Integer> map = new HashMap<>(4);
             map.put("payOrderCount", 1);
             map.put("payTotalAmount", json.getInt("money"));
+            System.out.println("=======" + key.toString());
             return new Tuple2<>(key.toString(), map);
         }).reduceByKey((stringIntegerMap , stringIntegerMap2) -> {
             Map<String, Integer> map = new HashMap<>(4);
@@ -87,8 +96,12 @@ public class PayStatisticsDataService implements Serializable {
             map.put("payTotalAmount", stringIntegerMap.get("payTotalAmount") + stringIntegerMap2.get("payTotalAmount"));
             return map;
         }).foreach(tuple2 -> {
+
             String[] keys = tuple2._1.split("#");
             int keyLength = 6;
+
+            System.out.println("=======" + keys.length + " = " + tuple2._1);
+
             if(keyLength == keys.length){
                 String appID = keys[0];
                 String childID = keys[1];
@@ -102,5 +115,34 @@ public class PayStatisticsDataService implements Serializable {
                         Integer.parseInt(appChannelID) , Integer.parseInt(packageID) , payOrderCount, payTotalAmount);
             }
         });
+    }
+
+
+    public static void main(String[] args) throws  Exception {
+
+        List<String> list = Files.readAllLines(Paths.get("/opt/yxtest/sparktest/info.log2018-11-15"));
+
+
+        List<JSONObject> l = new ArrayList<>();
+
+
+        for (String pay : list) {
+            if(pay.contains("package_id\":250")) {
+                JSONObject json = JSONObject.fromObject(pay);
+                l.add(json);
+            }
+        }
+
+        SparkConf conf = new SparkConf().setAppName("Collaborative Filtering Example").setMaster("local");
+
+        JavaSparkContext sc = new JavaSparkContext(conf);
+
+
+        JavaRDD<JSONObject> javaRDD = sc.parallelize(l);
+
+        PayStatisticsDataService android = new PayStatisticsDataService();
+        android.payOrderData(javaRDD);
+
+
     }
 }

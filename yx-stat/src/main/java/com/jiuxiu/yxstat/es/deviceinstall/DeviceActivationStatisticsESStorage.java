@@ -1,19 +1,27 @@
 package com.jiuxiu.yxstat.es.deviceinstall;
 
 import com.jiuxiu.yxstat.es.ElasticSearchConfig;
+import com.jiuxiu.yxstat.utils.DateUtil;
 import com.jiuxiu.yxstat.utils.PropertyUtils;
 import net.sf.json.JSONObject;
 import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
  * Created by ZhouFy on 2018/6/12.
@@ -22,7 +30,10 @@ import java.util.Map;
  */
 public class DeviceActivationStatisticsESStorage implements Serializable {
 
-    private String index = PropertyUtils.getValue("es.device.install.index");
+    private static String DEVICE_INSTALL_INDEX = PropertyUtils.getValue("es.device.install.index");
+
+    private static String androidClickIndex = PropertyUtils.getValue("es.android.click.index");
+
 
     private static DeviceActivationStatisticsESStorage deviceActivationStatisticsESStorage = new DeviceActivationStatisticsESStorage();
 
@@ -43,11 +54,12 @@ public class DeviceActivationStatisticsESStorage implements Serializable {
      */
     public SearchResponse getAppDeviceActivationForImei(String imei, int appid, int childID) {
         Client client = ElasticSearchConfig.getClient();
-        String type = index + "_APPID_" + appid;
+        String type = DEVICE_INSTALL_INDEX + "_APPID_" + appid;
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .must(QueryBuilders.termQuery("imei", imei))
                 .must(QueryBuilders.termQuery("child_id", childID));
-        return client.prepareSearch(index).setTypes(type).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
+
+        return client.prepareSearch(DEVICE_INSTALL_INDEX).setTypes(type).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
     }
 
     /**
@@ -60,11 +72,11 @@ public class DeviceActivationStatisticsESStorage implements Serializable {
      */
     public SearchResponse getAppDeviceActivationForIdfa(String idfa, int appid, int childID) {
         Client client = ElasticSearchConfig.getClient();
-        String type = index + "_APPID_" + appid;
+        String type = DEVICE_INSTALL_INDEX + "_APPID_" + appid;
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .must(QueryBuilders.termQuery("idfa", idfa))
                 .must(QueryBuilders.termQuery("child_id", childID));
-        return client.prepareSearch(index).setTypes(type).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
+        return client.prepareSearch(DEVICE_INSTALL_INDEX).setTypes(type).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
     }
 
 
@@ -76,7 +88,7 @@ public class DeviceActivationStatisticsESStorage implements Serializable {
      */
     public SearchResponse iosSpecialSearchForAppID(String ip, String deviceName, String deviceOsVer, int appid, int childID) {
         Client client = ElasticSearchConfig.getClient();
-        String esType = index + "_APPID_" + appid;
+        String esType = DEVICE_INSTALL_INDEX + "_APPID_" + appid;
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
                 .must(QueryBuilders.termQuery("ip", ip))
                 .must(QueryBuilders.termQuery("device_name", deviceName))
@@ -88,7 +100,7 @@ public class DeviceActivationStatisticsESStorage implements Serializable {
 
         SearchResponse response = null;
         if (client != null) {
-            response = client.prepareSearch(index).setTypes(esType).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
+            response = client.prepareSearch(DEVICE_INSTALL_INDEX).setTypes(esType).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
 
         }
         return response;
@@ -100,16 +112,72 @@ public class DeviceActivationStatisticsESStorage implements Serializable {
      *
      * @param json
      */
-    public IndexResponse saveDeviceInstallForAppID(JSONObject json, int appid) {
-        String esType = index + "_APPID_" + appid;
+    public void saveDeviceInstallForAppID(JSONObject json, int appid) {
+        String esType = DEVICE_INSTALL_INDEX + "_APPID_" + appid;
         Client client = ElasticSearchConfig.getClient();
         Map<String, Object> source = esDataReduction(json);
         if (client != null) {
-            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(index, esType);
-            return indexRequestBuilder.setSource(source).execute().actionGet();
+            IndexRequestBuilder indexRequestBuilder = client.prepareIndex(DEVICE_INSTALL_INDEX, esType);
+            indexRequestBuilder.setSource(source).execute().actionGet();
         }
-        return null;
     }
+
+
+
+    public int getIPActiveCount(String ip, int appid) {
+        int count = 0;
+        Client client = ElasticSearchConfig.getClient();
+
+        String nowDate = DateUtil.getNowDate(DateUtil.YYYY_MM_DD);
+
+        long time;
+        try {
+            SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
+            Date date = format.parse(nowDate);
+            time = date.getTime() / 1000;
+        } catch (ParseException e) {
+            time = 0;
+        }
+
+        String type = DEVICE_INSTALL_INDEX + "_APPID_" + appid;
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("ip", ip))
+                .must(QueryBuilders.rangeQuery("install_time").gt(time));
+        SearchResponse searchResponse = client.prepareSearch(DEVICE_INSTALL_INDEX).setTypes(type).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
+
+        if (searchResponse != null) {
+            count = searchResponse.getHits().getHits().length;
+        }
+        return count;
+
+    }
+
+
+
+
+    public void updateAndroidClickInfo(String type, String esid){
+
+        Client client = ElasticSearchConfig.getClient();
+
+        String esType = androidClickIndex + "_" + type;
+
+        try {
+            UpdateRequest updateRequest = new UpdateRequest();
+            updateRequest.index(androidClickIndex);
+            updateRequest.type(esType);
+            updateRequest.id(esid);
+            updateRequest.doc(jsonBuilder()
+                    .startObject()
+                    .field("status", 1)
+                    .endObject());
+
+            client.update(updateRequest).get();
+        } catch (IOException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     /**
      * 保存es的数据转换  将 json 的key 转换成 es 对应的 field

@@ -94,9 +94,6 @@ public class ActivationDataService implements Serializable {
                             return ServiceConstant.IOS_OS == json.getInt("os");
                         }
                     });
-                    // 计算 启动数 数据
-                    Thread startupCountTask = new Thread(new StartupCountDataService(javaRDD));
-                    startupCountTask.start();
 
                     // 平台android数据
                     Thread platformAndroidTask = new Thread(new PlatformAndroidActivationDataService(android));
@@ -108,12 +105,10 @@ public class ActivationDataService implements Serializable {
 
 
                     // 计算 android 数据
-                    Thread androidTask = new Thread(new AndroidActivationDataService(android));
+                    Thread androidTask = new Thread(new AndroidActivationDataServiceNew(android));
                     androidTask.start();
 
                     // 计算 ios 数据
-                    /*Thread iosTask = new Thread(new IOSActivationDataService(ios));
-                    iosTask.start();*/
                     Thread iosTask = new Thread(new IOSActivationDataServiceNew(ios));
                     iosTask.start();
 

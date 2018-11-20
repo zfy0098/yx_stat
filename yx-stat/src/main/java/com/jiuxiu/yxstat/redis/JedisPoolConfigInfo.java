@@ -1,6 +1,7 @@
 package com.jiuxiu.yxstat.redis;
 
 import com.jiuxiu.yxstat.utils.PropertyUtils;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 import redis.clients.jedis.JedisPool;
 
 import java.util.HashMap;
@@ -23,7 +24,9 @@ public class JedisPoolConfigInfo extends JedisPoolConfigAbstract {
 
     public static String kafkaOffsetRedisPoolKey = "kafkaOffset";
 
-    public static String iosClickPoolKey = "iosClick";
+    public static String adClickPoolKey = "adClick";
+
+    public static String appRolePoolKey = "appRole";
 
     private JedisPoolConfigInfo() {
 
@@ -57,12 +60,21 @@ public class JedisPoolConfigInfo extends JedisPoolConfigAbstract {
         /**
          *  保存 ios click id
          */
-        String iosClickHost = PropertyUtils.getValue("redis.ios.click.redis.host");
-        int iosClickPort = Integer.parseInt(PropertyUtils.getValue("redis.ios.click.redis.port"));
-        String iosClickPassword = PropertyUtils.getValue("redis.ios.click.redis.password");
-        int iosClickDataIndex = Integer.parseInt(PropertyUtils.getValue("redis.ios.click.redis.dataIndex"));
-        JedisPool iosClickRedis = new JedisPool(getJedisPoolConfig() , iosClickHost , iosClickPort , timeOut , iosClickPassword , iosClickDataIndex);
-        jedisPoolMap.put(iosClickPoolKey , iosClickRedis);
+        String adClickHost = PropertyUtils.getValue("redis.ad.click.redis.host");
+        int adClickPort = Integer.parseInt(PropertyUtils.getValue("redis.ad.click.redis.port"));
+        String adClickPassword = PropertyUtils.getValue("redis.ad.click.redis.password");
+        int adClickDataIndex = Integer.parseInt(PropertyUtils.getValue("redis.ad.click.redis.dataIndex"));
+        JedisPool adClickRedis = new JedisPool(getJedisPoolConfig() , adClickHost , adClickPort , timeOut , adClickPassword , adClickDataIndex);
+        jedisPoolMap.put(adClickPoolKey, adClickRedis);
+
+
+
+        String appRoleHost = PropertyUtils.getValue("redis.app_role.host");
+        int appRolePort = Integer.parseInt(PropertyUtils.getValue("redis.app_role.port"));
+        String appRolePassword = PropertyUtils.getValue("redis.app_role.password");
+        int appRoleDataIndex = Integer.parseInt(PropertyUtils.getValue("redis.app_role.dateIndex"));
+        JedisPool appRole = new JedisPool(getJedisPoolConfig(), appRoleHost, appRolePort, timeOut, appRolePassword, appRoleDataIndex);
+        jedisPoolMap.put(appRolePoolKey, appRole);
 
 
 

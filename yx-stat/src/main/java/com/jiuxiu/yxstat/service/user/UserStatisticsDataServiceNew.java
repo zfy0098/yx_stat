@@ -46,7 +46,7 @@ public class UserStatisticsDataServiceNew implements Runnable, Serializable {
 
             int os = json.getInt("os");
             if(os == ServiceConstant.IOS_OS){
-                String value = JedisUtils.get(JedisPoolConfigInfo.iosClickPoolKey,  CacheKey.IOS_CLICK_INFO + imei + ":" + appID);
+                String value = JedisUtils.get(JedisPoolConfigInfo.adClickPoolKey,  CacheKey.IOS_CLICK_INFO + imei + ":" + appID);
                 if(StringUtils.isEmpty(value)){
                     JSONObject redisInfo = JSONObject.fromObject(value);
 

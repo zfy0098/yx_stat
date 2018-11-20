@@ -16,25 +16,19 @@ import com.jiuxiu.yxstat.utils.DateUtil;
 import com.jiuxiu.yxstat.utils.PropertyUtils;
 import com.jiuxiu.yxstat.utils.StringUtils;
 import net.sf.json.JSONObject;
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,7 +38,8 @@ import java.util.Map;
  */
 public class IOSActivationDataServiceNew implements Runnable, Serializable {
 
-    private static String deviceInstallIndex = PropertyUtils.getValue("es.device.install.index");
+
+    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static String IOSClickIndex = PropertyUtils.getValue("es.ios.click.index");
 
@@ -74,6 +69,7 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
     public void run() {
 
         JavaRDD<JSONObject> ioss = ios.filter(json -> {
+
             int appID = json.getInt("appid");
             int childID = json.getInt("child_id");
             int appChannelID = json.getInt("app_channel_id");
@@ -117,7 +113,7 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
 
                 // 获取同ip激活数
                 String ip = json.getString("client_ip");
-                int ipActiveCount = getIPActiveCount(ip, appID);
+                int ipActiveCount = deviceActivationStatisticsESStorage.getIPActiveCount(ip, appID);
 
                 if (ipActiveCount < ServiceConstant.ACTIVE_COUNT) {
 
@@ -137,23 +133,29 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
 
                     System.out.println("date:" + date + ", idfa : " + idfa + " , appid:" + appID + ", ip:" + ip + ", deviceosver:" + deviceOSVer) ;
 
-                    SearchResponse adClickInfo;
+                    String type = date;
+                    SearchResponse adClickInfo = null;
                     if (!StringUtils.isEmpty(idfa)) {
-                        adClickInfo = getAdClickInfo(date, idfa);
+                        adClickInfo = getAdClickInfo(date, appID, idfa);
                         if (adClickInfo.getHits().getHits().length == 0) {
                             String nowDate = DateUtil.getNowDate("yyyyMMdd");
+                            type = nowDate;
                             System.out.println("date:" + nowDate + ", idfa : " + idfa + " , appid:" + appID);
-                            adClickInfo = getAdClickInfo(nowDate, idfa);
+                            adClickInfo = getAdClickInfo(nowDate, appID, idfa);
                             if (adClickInfo.getHits().getHits().length > 0) {
                                 adClickFlag = true;
                             }
                         } else {
                             adClickFlag = true;
                         }
-                    } else {
+                    }
+
+                    if(adClickInfo != null && adClickInfo.getHits().getHits().length == 0){
+                        type = date;
                         adClickInfo = getAdClickInfo(date, appID, ip, deviceName, deviceOSVer);
                         if (adClickInfo.getHits().getHits().length == 0) {
                             String nowDate = DateUtil.getNowDate("yyyyMMdd");
+                            type = nowDate;
                             System.out.println("date:" + nowDate + ", appid:" + appID + ", ip:" + ip + ", deviceosver:" + deviceOSVer);
                             adClickInfo = getAdClickInfo(date, appID, ip, deviceName, deviceOSVer);
                             if (adClickInfo.getHits().getHits().length > 0) {
@@ -172,6 +174,8 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
 
                         System.out.println("获取ios click info 成功" + hit.getSource().toString()) ;
 
+                        deviceActivationStatisticsESStorage.updateAndroidClickInfo(type, hit.getId());
+
                         Map<String,Object> map = hit.getSource();
 
                         appID = Integer.parseInt(map.get("appid").toString());
@@ -189,7 +193,7 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
                         JSONObject clickInfo = new JSONObject();
                         clickInfo.putAll(json);
                         clickInfo.put("ad_click" , JSONObject.fromObject(map));
-                        JedisUtils.listAdd(JedisPoolConfigInfo.iosClickPoolKey , "click_device", clickInfo.toString());
+                        JedisUtils.listAdd(JedisPoolConfigInfo.adClickPoolKey, "click_device", clickInfo.toString());
                     }
                 }
 
@@ -197,7 +201,7 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
                 deviceActivationStatisticsESStorage.saveDeviceInstallForAppID(json, appID);
 
                 //将新的id 写入到redis 中
-                JedisUtils.set(JedisPoolConfigInfo.iosClickPoolKey,  CacheKey.IOS_CLICK_INFO + imei + ":" + appID, json.toString(), ServiceConstant.ACTIVATION_INFO_EXPIRE_TIME);
+                JedisUtils.set(JedisPoolConfigInfo.adClickPoolKey,  CacheKey.IOS_CLICK_INFO + imei + ":" + appID, json.toString(), ServiceConstant.ACTIVATION_INFO_EXPIRE_TIME);
 
 
                 //  保存 app id 激活数  (当天)
@@ -317,43 +321,15 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
                 statPackageIdDeviceActiveDao.savePackageIDMinuteStartUpCount(time, appid, childID, channelID, appChannelID, packageID, tuple2._2);
             }
         });
-
     }
 
-
-    private int getIPActiveCount(String ip, int appid) {
-        int count = 0;
-        Client client = ElasticSearchConfig.getClient();
-
-        String nowDate = DateUtil.getNowDate(DateUtil.YYYY_MM_DD);
-
-        long time = 0;
-        try {
-            SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
-            Date date = format.parse(nowDate);
-            time = date.getTime() / 1000;
-        } catch (ParseException e) {
-        }
-
-        String type = deviceInstallIndex + "_APPID_" + appid;
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .must(QueryBuilders.termQuery("ip", ip))
-                .must(QueryBuilders.rangeQuery("install_time").gt(time));
-        SearchResponse searchResponse = client.prepareSearch(deviceInstallIndex).setTypes(type).setSearchType(SearchType.QUERY_AND_FETCH).setQuery(queryBuilder).execute().actionGet();
-
-        if (searchResponse != null) {
-            count = searchResponse.getHits().getHits().length;
-        }
-        return count;
-
-    }
-
-    private SearchResponse getAdClickInfo(String date, String idfa){
+    private SearchResponse getAdClickInfo(String date,int appid, String idfa){
         Client client = ElasticSearchConfig.getClient();
 
         String esType = IOSClickIndex + "_" + date;
 
         QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("appid", appid))
                 .must(QueryBuilders.termQuery("idfa", idfa));
 
         return client.prepareSearch(IOSClickIndex).setTypes(esType)
@@ -381,21 +357,22 @@ public class IOSActivationDataServiceNew implements Runnable, Serializable {
 
     public static void main(String[] args) throws Exception {
         //这里测试环境为windows，本地运行
-        SparkConf conf = new SparkConf().setAppName("Collaborative Filtering Example").setMaster("local");
-        JavaSparkContext sc = new JavaSparkContext(conf);
+//        SparkConf conf = new SparkConf().setAppName("Collaborative Filtering Example").setMaster("local");
+//
+////        conf.set("spark.executor.extraJavaOptions" , "-Dlogback.configurationFile=/opt/yxtest/logback.xml");
+//
+////        JavaSparkContext sc = new JavaSparkContext(conf);
 
 
-        String str = "{\"device_os_ver\":\"iOS 11.4.1\",\"imei\":\"68e6f348f50004722c57c474XXXXXXXXX\",\"logid\":\"b6394bbdf6feaf2beb9403904f15cf87\",\"api_ver\":\"1.2.0\",\"app_ver\":\"1.0.6\",\"mac\":\"\",\"package_id\":1,\"child_id\":1,\"device_name\":\"iPhone9,1\",\"app_channel_id\":1,\"os\":2,\"sdk_ver\":\"1.2.0\",\"channel_id\":1,\"appid\":10014,\"idfa\":\"\",\"client_ip\":\"113.5.4.99\",\"ts\":1539400606}";
+        String str = "{\"device_os_ver\":\"iOS 11.4.1\",\"imei\":\"68e6f348f50004722c57c474XXXXXXXXX\",\"logid\":\"b6394bbdf6feaf2beb9403904f15cf87\",\"api_ver\":\"1.2.0\",\"app_ver\":\"1.0.6\",\"mac\":\"\",\"package_id\":1,\"child_id\":1,\"device_name\":\"iPhone9,1\",\"app_channel_id\":1,\"os\":2,\"sdk_ver\":\"1.2.0\",\"channel_id\":1,\"appid\":10014,\"idfa\":\"\",\"client_ip\":\"113.5.4.99\",\"ts\":1540783006}";
 
         JSONObject json = JSONObject.fromObject(str);
 
-        List<JSONObject> list = new ArrayList<>();
-        list.add(json);
-        JavaRDD<JSONObject> lines = sc.parallelize(list);
 
-        IOSActivationDataServiceNew iosActivationDataServiceNew = new IOSActivationDataServiceNew(lines);
-        iosActivationDataServiceNew.run();
+        for (int i = 0; i < 10000; i++) {
 
+            deviceActivationStatisticsESStorage.saveDeviceInstallForAppID(json, 10014);
+        }
 
     }
 }

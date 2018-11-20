@@ -3,12 +3,18 @@ package com.jiuxiu.yxstat.es;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
  * Created with IDEA by Zhoufy on 2018/5/14.
@@ -27,35 +33,27 @@ public class ElasticSearchCase {
             return ;
         }
 
-        GetRequestBuilder getRequestBuilder = client.prepareGet("user_index" , "user" , "31289801");
-        GetResponse response = getRequestBuilder.execute().actionGet();
+        //7dde6bd71c1807854164982f21635973
+
+        try {
+            UpdateRequest updateRequest = new UpdateRequest();
+            updateRequest.index("android_click");
+            updateRequest.type("android_click_20181110");
+            updateRequest.id("AWbxX5pKfXyT0_zQrrQT");
+            updateRequest.doc(jsonBuilder()
+                    .startObject()
+                    .field("mac", "updatealtermac")
+                    .endObject());
 
 
-
-        log.info("------------------------------------------------------------------------------------------------------");
-
-
-        log.info(response.toString());
-
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .must(QueryBuilders.termQuery("registchannel", "8169live"))
-                .must(QueryBuilders.rangeQuery("registtime").gt(1505900222).lt(1505900224));
-
-
-        SearchResponse response2 = client.prepareSearch("user_index" , "user").setQuery(queryBuilder)
-                .setFrom(0).setSize(10)
-                .execute().actionGet();
-
-        SearchHit[] searchHits = response2.getHits().getHits();
-        for (int i = 0; i < searchHits.length; i++) {
-            SearchHit searchHit = searchHits[i];
-            log.info(searchHit.getSourceAsString());
+            client.update(updateRequest).get();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
         }
-
-
-        SearchResponse response1 = client.prepareSearch("room_index_v2" , "room").execute().actionGet();
-        log.info(response1.toString());
-
 
 
         ElasticSearchConfig.closeClient(client);
