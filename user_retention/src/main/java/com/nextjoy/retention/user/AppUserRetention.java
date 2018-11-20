@@ -29,21 +29,29 @@ public class AppUserRetention {
 
     private void init(String nowDate) {
 
+        List<String> dateList = DateUtils.dateAgo(nowDate);
+
         SparkConf sparkConf = new SparkConf().setAppName("user_retention").setMaster("spark://172.26.110.193:7077");
 
         SparkSession sqlContext = SparkSession.builder().config(sparkConf).enableHiveSupport().getOrCreate();
 
         sqlContext.sql("use yxstat");
 
-        List<String> dateList = DateUtils.dateAgo(nowDate);
+        saveRegisterData(sqlContext, nowDate);
 
-        String date = dateList.get(1);
-        saveRegisterData(sqlContext, date);
+        registerRetentionNew(sqlContext, dateList, nowDate);
 
-        String appidSQL = "select appid, count(1) as count, '%s' from (select appid, a.uid from user_login as a inner join (select uid from user_register where riqi='%s') as b" +
-                " on a.uid=b.uid where riqi='%s' group by appid, a.uid)" +
-                " as c group by appid";
-        Map<String, Dataset<Row>> appidMap = executeSQL(sqlContext, dateList, appidSQL);
+        sqlContext.close();
+    }
+
+
+
+    private void registerRetentionNew(SparkSession sqlContext, List<String> dateList, String nowDate){
+        String appidSQL = "select appid, count(distinct(uid)) as count, '%s' from " +
+                " (select appid, a.uid from user_register as a " +
+                " inner join (select uid from user_login where riqi = '%s') as b on a.uid = b.uid where riqi = '%s') as c " +
+                " group by appid";
+        Map<String, Dataset<Row>> appidMap = executeSQL(sqlContext, dateList, appidSQL, nowDate);
         for (String key : appidMap.keySet()) {
             Dataset<Row> dataSet = appidMap.get(key);
             for (Row row : dataSet.collectAsList()) {
@@ -54,10 +62,11 @@ public class AppUserRetention {
             }
         }
 
-        String childIDSQL = "select appid, child_id, count(1) as count, '%s' from " +
-                " (select appid, child_id, a.uid from user_login as a inner join (select uid from user_register where riqi='%s') as b" +
-                "  on a.uid=b.uid where riqi='%s'  group by appid, child_id, a.uid ) as c group by appid, child_id ";
-        Map<String, Dataset<Row>> childIDMap = executeSQL(sqlContext, dateList, childIDSQL);
+        String childIDSQL = "select appid, child_id, count(distinct(uid)) as count, '%s' from " +
+                " (select appid ,child_id, a.uid from user_register as a " +
+                " inner join (select uid from user_login where riqi = '%s') as b on a.uid = b.uid where riqi = '%s') as c " +
+                " group by appid, child_id";
+        Map<String, Dataset<Row>> childIDMap = executeSQL(sqlContext, dateList, childIDSQL, nowDate);
         for (String key : childIDMap.keySet()) {
             Dataset<Row> dataSet = childIDMap.get(key);
             for (Row row : dataSet.collectAsList()) {
@@ -69,10 +78,11 @@ public class AppUserRetention {
             }
         }
 
-        String channelIDSQL = "select appid, child_id, channel_id, count(1) as count, '%s' from " +
-                " (select appid ,child_id, channel_id, a.uid from user_login as a inner join (select uid from user_register where riqi='%s' ) as b " +
-                " on a.uid=b.uid where riqi='%s' group by appid, child_id, channel_id, a.uid) as c group by appid, child_id, channel_id ";
-        Map<String, Dataset<Row>> channelIDMap = executeSQL(sqlContext, dateList, channelIDSQL);
+        String channelIDSQL = "select appid, child_id, channel_id, count(distinct(uid)) as count, '%s' from " +
+                " (select appid ,child_id, channel_id, a.uid from user_register as a " +
+                " inner join (select uid from user_login where riqi = '%s') as b on a.uid = b.uid where riqi = '%s') as c " +
+                " group by appid, child_id, channel_id";
+        Map<String, Dataset<Row>> channelIDMap = executeSQL(sqlContext, dateList, channelIDSQL, nowDate);
         for (String key : channelIDMap.keySet()) {
             Dataset<Row> dataSet = channelIDMap.get(key);
             for (Row row : dataSet.collectAsList()) {
@@ -85,11 +95,11 @@ public class AppUserRetention {
             }
         }
 
-        String appChannelIDSQL = "select appid, child_id, channel_id, app_channel_id, count(1) as count, '%s' from " +
-                " (select appid ,child_id, channel_id, app_channel_id, a.uid from user_login as a inner join (select uid from user_register where riqi='%s') as b" +
-                "  on a.uid=b.uid where riqi='%s' group by appid, child_id, channel_id, app_channel_id, a.uid )" +
-                " as c group by appid, child_id, channel_id, app_channel_id";
-        Map<String, Dataset<Row>> appChannelIDMap = executeSQL(sqlContext, dateList, appChannelIDSQL);
+        String appChannelIDSQL = "select appid, child_id, channel_id, app_channel_id, count(distinct(uid)) as count, '%s' from " +
+                " (select appid ,child_id, channel_id, app_channel_id, a.uid from user_register as a " +
+                " inner join (select uid from user_login where riqi = '%s') as b on a.uid = b.uid where riqi = '%s') as c " +
+                " group by appid, child_id, channel_id, app_channel_id";
+        Map<String, Dataset<Row>> appChannelIDMap = executeSQL(sqlContext, dateList, appChannelIDSQL, nowDate);
         for (String key : appChannelIDMap.keySet()) {
             Dataset<Row> dataSet = appChannelIDMap.get(key);
             for (Row row : dataSet.collectAsList()) {
@@ -103,12 +113,11 @@ public class AppUserRetention {
             }
         }
 
-        String packageIDSQL = "select appid, child_id, channel_id, app_channel_id, package_id, count(1) as count, '%s' from" +
-                " (select appid ,child_id, channel_id, app_channel_id, package_id, a.uid from user_login as a inner join " +
-                " (select uid from user_register where riqi='%s' ) as b" +
-                " on a.uid=b.uid where riqi='%s' group by appid, child_id, channel_id, app_channel_id, package_id, a.uid )" +
-                " as c group by appid, child_id, channel_id, app_channel_id, package_id";
-        Map<String, Dataset<Row>> packageIDMap = executeSQL(sqlContext, dateList, packageIDSQL);
+        String packageIDSQL = "select appid, child_id, channel_id, app_channel_id, package_id, count(distinct(uid)) as count, '%s' from " +
+                " (select appid ,child_id, channel_id, app_channel_id, package_id, a.uid from user_register as a " +
+                " inner join (select uid from user_login where riqi = '%s') as b on a.uid = b.uid where riqi = '%s') as c " +
+                " group by appid, child_id, channel_id, app_channel_id, package_id";
+        Map<String, Dataset<Row>> packageIDMap = executeSQL(sqlContext, dateList, packageIDSQL, nowDate);
         for (String key : packageIDMap.keySet()) {
             Dataset<Row> dataSet = packageIDMap.get(key);
             for (Row row : dataSet.collectAsList()) {
@@ -122,12 +131,97 @@ public class AppUserRetention {
                 userRetention.savePackageIDRetention(appid, childID, channelID, appChannelID, packageID, count, day, key);
             }
         }
-        sqlContext.close();
     }
+
+
+//    private void registerRetention(SparkSession sqlContext, List<String> dateList, String nowDate){
+//        String appidSQL = "select appid, count(1) as count, '%s' from (select appid, a.uid from user_login as a inner join (select uid from user_register where riqi= '%s' group by uid, appid   ) as b" +
+//                " on a.uid=b.uid where riqi='%s' group by appid, a.uid)" +
+//                " as c group by appid";
+//        Map<String, Dataset<Row>> appidMap = executeSQL(sqlContext, dateList, appidSQL, nowDate);
+//        for (String key : appidMap.keySet()) {
+//            Dataset<Row> dataSet = appidMap.get(key);
+//            for (Row row : dataSet.collectAsList()) {
+//                int appid = row.getInt(0);
+//                long count = row.getLong(1);
+//                String day = row.getString(2);
+//                userRetention.saveAppIDRetention(appid, count, day, key);
+//            }
+//        }
+//
+//        String childIDSQL = "select appid, child_id, count(1) as count, '%s' from " +
+//                " (select appid, child_id, a.uid from user_login as a inner join (select uid from user_register where riqi= '%s' group by uid, appid, child_id) as b" +
+//                "  on a.uid=b.uid where riqi='%s'  group by appid, child_id, a.uid ) as c group by appid, child_id ";
+//        Map<String, Dataset<Row>> childIDMap = executeSQL(sqlContext, dateList, childIDSQL, nowDate);
+//        for (String key : childIDMap.keySet()) {
+//            Dataset<Row> dataSet = childIDMap.get(key);
+//            for (Row row : dataSet.collectAsList()) {
+//                int appid = row.getInt(0);
+//                int childID = row.getInt(1);
+//                long count = row.getLong(2);
+//                String day = row.getString(3);
+//                userRetention.saveChildIDRetention(appid, childID, count, day, key);
+//            }
+//        }
+//
+//        String channelIDSQL = "select appid, child_id, channel_id, count(1) as count, '%s' from " +
+//                " (select appid ,child_id, channel_id, a.uid from user_login as a inner join (select uid from user_register where riqi= '%s' group by uid, appid, child_id, channel_id ) as b " +
+//                " on a.uid=b.uid where riqi='%s' group by appid, child_id, channel_id, a.uid) as c group by appid, child_id, channel_id ";
+//        Map<String, Dataset<Row>> channelIDMap = executeSQL(sqlContext, dateList, channelIDSQL, nowDate);
+//        for (String key : channelIDMap.keySet()) {
+//            Dataset<Row> dataSet = channelIDMap.get(key);
+//            for (Row row : dataSet.collectAsList()) {
+//                int appid = row.getInt(0);
+//                int childID = row.getInt(1);
+//                int channelID = row.getInt(2);
+//                long count = row.getLong(3);
+//                String day = row.getString(4);
+//                userRetention.saveChannelIDRetention(appid, childID, channelID, count, day, key);
+//            }
+//        }
+//
+//        String appChannelIDSQL = "select appid, child_id, channel_id, app_channel_id, count(1) as count, '%s' from " +
+//                " (select appid ,child_id, channel_id, app_channel_id, a.uid from user_login as a inner join (select uid from user_register where riqi= '%s' group by uid, appid, child_id, channel_id, app_channel_id) as b" +
+//                "  on a.uid=b.uid where riqi='%s' group by appid, child_id, channel_id, app_channel_id, a.uid )" +
+//                " as c group by appid, child_id, channel_id, app_channel_id";
+//        Map<String, Dataset<Row>> appChannelIDMap = executeSQL(sqlContext, dateList, appChannelIDSQL, nowDate);
+//        for (String key : appChannelIDMap.keySet()) {
+//            Dataset<Row> dataSet = appChannelIDMap.get(key);
+//            for (Row row : dataSet.collectAsList()) {
+//                int appid = row.getInt(0);
+//                int childID = row.getInt(1);
+//                int channelID = row.getInt(2);
+//                int appChannelID = row.getInt(3);
+//                long count = row.getLong(4);
+//                String day = row.getString(5);
+//                userRetention.saveAppChannelIDRetention(appid, childID, channelID, appChannelID, count, day, key);
+//            }
+//        }
+//
+//        String packageIDSQL = "select appid, child_id, channel_id, app_channel_id, package_id, count(1) as count, '%s' from" +
+//                " (select appid ,child_id, channel_id, app_channel_id, package_id, a.uid from user_login as a inner join " +
+//                " (select uid from user_register where riqi= '%s' group by uid, appid, child_id, channel_id, app_channel_id ) as b" +
+//                " on a.uid=b.uid where riqi='%s' group by appid, child_id, channel_id, app_channel_id, package_id, a.uid )" +
+//                " as c group by appid, child_id, channel_id, app_channel_id, package_id";
+//        Map<String, Dataset<Row>> packageIDMap = executeSQL(sqlContext, dateList, packageIDSQL, nowDate);
+//        for (String key : packageIDMap.keySet()) {
+//            Dataset<Row> dataSet = packageIDMap.get(key);
+//            for (Row row : dataSet.collectAsList()) {
+//                int appid = row.getInt(0);
+//                int childID = row.getInt(1);
+//                int channelID = row.getInt(2);
+//                int appChannelID = row.getInt(3);
+//                int packageID = row.getInt(4);
+//                long count = row.getLong(5);
+//                String day = row.getString(6);
+//                userRetention.savePackageIDRetention(appid, childID, channelID, appChannelID, packageID, count, day, key);
+//            }
+//        }
+//    }
 
     private void saveRegisterData(SparkSession sqlContext, String date) {
 
-        String appidSQL = "select appid, count(1) as count , '" + date + "' from user_register where riqi='" + date + "' group by appid";
+        String appidSQL = "select appid, count(distinct(uid)) as count , '" + date + "' from user_register where riqi='" + date + "' group by appid";
         Dataset<Row> dataset = sqlContext.sql(appidSQL);
         for (Row row : dataset.collectAsList()) {
             int appid = row.getInt(0);
@@ -135,7 +229,7 @@ public class AppUserRetention {
             userRegister.saveAppIDRegister(appid, count, date);
         }
 
-        String childIDSQL = "select appid, child_id, count(1) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid , child_id";
+        String childIDSQL = "select appid, child_id, count(distinct(uid)) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid , child_id";
         dataset = sqlContext.sql(childIDSQL);
         for (Row row : dataset.collectAsList()) {
             int appid = row.getInt(0);
@@ -144,7 +238,7 @@ public class AppUserRetention {
             userRegister.saveChildIDRegister(appid, childID, count, date);
         }
 
-        String channelIDSQL = "select appid, child_id, channel_id, count(1) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid , child_id, channel_id";
+        String channelIDSQL = "select appid, child_id, channel_id, count(distinct(uid)) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid , child_id, channel_id";
         dataset = sqlContext.sql(channelIDSQL);
         for (Row row : dataset.collectAsList()) {
             int appid = row.getInt(0);
@@ -154,7 +248,7 @@ public class AppUserRetention {
             userRegister.saveChannelIDRegister(appid, childID, channelID, count, date);
         }
 
-        String appChannelIDSQL = "select appid, child_id, channel_id, app_channel_id, count(1) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid, child_id, channel_id, app_channel_id";
+        String appChannelIDSQL = "select appid, child_id, channel_id, app_channel_id, count(distinct(uid)) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid, child_id, channel_id, app_channel_id";
         dataset = sqlContext.sql(appChannelIDSQL);
         for (Row row : dataset.collectAsList()) {
             int appid = row.getInt(0);
@@ -165,7 +259,7 @@ public class AppUserRetention {
             userRegister.saveAppChannelIDRegister(appid, childID, channelID, appChannelID, count, date);
         }
 
-        String packageIDSQL = "select appid, child_id, channel_id, app_channel_id, package_id, count(1) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid , child_id, channel_id , app_channel_id , package_id ";
+        String packageIDSQL = "select appid, child_id, channel_id, app_channel_id, package_id, count(distinct(uid)) as count, '" + date + "' from user_register where riqi='" + date + "' group by appid , child_id, channel_id , app_channel_id , package_id ";
         dataset = sqlContext.sql(packageIDSQL);
         for (Row row : dataset.collectAsList()) {
             int appid = row.getInt(0);
@@ -187,15 +281,13 @@ public class AppUserRetention {
      * @param sql
      * @return
      */
-    private Map<String, Dataset<Row>> executeSQL(SparkSession sqlContext, List<String> dateList, String sql) {
+    private Map<String, Dataset<Row>> executeSQL(SparkSession sqlContext, List<String> dateList, String sql, String registerDay) {
         Map<String, Dataset<Row>> map = new LinkedHashMap<>(Constant.days.length);
         if (dateList.size() > 0) {
-            String yesterday = dateList.get(0);
-            for (int i = 1; i < dateList.size(); i++) {
+            for (int i = 0; i < dateList.size() - 1; i++) {
                 String day = dateList.get(i);
-                String col = DayEnum.getCol(Constant.days[i]);
-
-                map.put(col, sqlContext.sql(String.format(sql, day, day, yesterday)));
+                String col = DayEnum.getCol(Constant.days[i + 1]);
+                map.put(col, sqlContext.sql(String.format(sql, day, registerDay, day)));
             }
         }
         return map;

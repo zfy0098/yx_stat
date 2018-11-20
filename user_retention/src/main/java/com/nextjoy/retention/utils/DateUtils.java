@@ -16,6 +16,26 @@ import java.util.List;
  */
 public class DateUtils {
 
+    public final static String YYYY_MM_DD = "yyyy-MM-dd";
+
+
+    /**
+     * 获取当前时间
+     *
+     * @param format 时间格式
+     * @return
+     */
+    public static String getNowDate(String format) {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(calendar.getTime());
+    }
+
+
+    public static String getData(Date date,  String format){
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(date);
+    }
 
     public static String dateAgo(String nowDate, int day) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -76,5 +96,35 @@ public class DateUtils {
         }
         return dataList;
     }
+
+
+    /**|
+     *   计算两个日期相差几天
+     * @param staDay
+     * @param endDay
+     * @return
+     * @throws ParseException
+     */
+    public static long differentDays(String staDay, String endDay) throws ParseException{
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date date1 = sdf.parse(staDay);
+        Date date2 = sdf.parse(endDay);
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date1);
+        long time1 = cal.getTimeInMillis();
+        cal.setTime(date2);
+        long time2 = cal.getTimeInMillis();
+        return (time2 - time1) / (1000 * 3600 * 24);
+    }
+
+
+    public static void main(String[] args) throws Exception{
+        long days = DateUtils.differentDays("2018-10-31", "2018-11-13");
+        System.out.println(days);
+    }
+
+
+
 
 }

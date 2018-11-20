@@ -14,7 +14,7 @@ public class PropertyUtils {
 
     private PropertyUtils() {
         try {
-            pro.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"));
+            pro.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("local.properties"));
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }

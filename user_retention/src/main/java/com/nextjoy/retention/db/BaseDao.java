@@ -61,7 +61,8 @@ public class BaseDao {
             return preparedStatement.executeUpdate();
         } catch (SQLException e) {
             log.error(e.getMessage() + "code = " + e.getErrorCode() + ",sql:" + sql + "params:" + Arrays.toString(params), e);
-            return -1;
+            System.exit(1);
+            return 1;
         } finally {
             ConnectionFactory.getInstance().closeConnection(connection, preparedStatement, resultSet);
         }
@@ -207,10 +208,10 @@ public class BaseDao {
             resultSet = preparedStatement.executeQuery();
             ResultSetMetaData md = resultSet.getMetaData();
             int columnCount = md.getColumnCount();
-            List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> list = new ArrayList<>();
             Map<String, Object> rowData;
             while (resultSet.next()) {
-                rowData = new HashMap<String, Object>(columnCount);
+                rowData = new HashMap<>(columnCount);
                 for (int i = 1; i <= columnCount; i++) {
                     rowData.put(md.getColumnLabel(i), resultSet.getString(i));
                 }
@@ -236,7 +237,7 @@ public class BaseDao {
             resultSet = preparedStatement.executeQuery();
             ResultSetMetaData md = resultSet.getMetaData();
             int columnCount = md.getColumnCount();
-            List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+            List<Map<String, String>> list = new ArrayList<>();
             Map<String, String> rowData;
             while (resultSet.next()) {
                 rowData = new HashMap<>(columnCount);

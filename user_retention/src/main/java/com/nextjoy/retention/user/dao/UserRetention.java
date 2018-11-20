@@ -44,7 +44,7 @@ public class UserRetention extends StatDataBase implements Serializable {
     }
 
     public void saveChildIDRetention(int appid , int childid ,  long count, String date, String col){
-        String sql = "select id  from stat_user_retention_rate_child_id where app_id = ? and child_id = ? and register_date = ?";
+        String sql = "select id from stat_user_retention_rate_child_id where app_id = ? and child_id = ? and register_date = ?";
         Map<String,Object> map = queryForMap(sql , new Object[]{appid , childid , date});
         if(map == null || map.isEmpty()){
             sql = "insert into stat_user_retention_rate_child_id (app_id , child_id, " + col + " , register_date )  values (?,?,?, ?) ";
@@ -56,7 +56,7 @@ public class UserRetention extends StatDataBase implements Serializable {
     }
 
     public void saveChannelIDRetention(int appid, int childid, int channelID, long count, String date, String col) {
-        String sql = "select id  from stat_user_retention_rate_channel_id where app_id = ? and child_id = ? and channel_id = ?  and register_date = ?";
+        String sql = "select id from stat_user_retention_rate_channel_id where app_id = ? and child_id = ? and channel_id = ?  and register_date = ?";
         Map<String, Object> map = queryForMap(sql, new Object[]{appid, childid, channelID, date});
         if (map == null || map.isEmpty()) {
             sql = "insert into stat_user_retention_rate_channel_id (app_id, child_id, channel_id, " + col + " , register_date) values (?,?,?,?,?)";
